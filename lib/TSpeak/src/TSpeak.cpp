@@ -53,7 +53,7 @@ void TSpeak::upload(float data[], bool single, int field) {
   }
 
   
-  Serial.println("Write fields");
+  //Serial.println("Write fields");
   int x = ThingSpeak.writeFields(_Channel_ID, _myWriteAPIKey);    //(
   
   if(x  == 200){
@@ -72,8 +72,8 @@ void TSpeak::download(int read_data_length, int * FieldNumber, float * data, con
   ThingSpeak.begin(_client);
   
   for (int i = 0; i < read_data_length; i++ ){
-    data[i] = ThingSpeak.readLongField(Channel_ID_2, FieldNumber[i], myReadAPIKey_2);
-    Serial.println("Data from ThingSpeak field number: " + String(FieldNumber[i]) + " and data " + String(data[i]));  
+    data[i] = ThingSpeak.readFloatField(Channel_ID_2, FieldNumber[i], myReadAPIKey_2);
+    //Serial.println("Data from ThingSpeak field number: " + String(FieldNumber[i]) + " and data " + String(data[i]));  
   }
   
 }

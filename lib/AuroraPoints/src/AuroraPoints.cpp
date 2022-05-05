@@ -16,7 +16,7 @@ AuroraPoints::AuroraPoints() {
   
 }
 
-float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, float IR_557, float cloud_cover, int night, float temp_adjust=202, float cloud_weight=2, float _557_weight=1.9, float fraction_weight=125) {
+float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, float IR_557, float cloud_cover, int night, float _557_weight=1.9, float fraction_weight=125) {
   
   if (FULL == 0 || IR == 0 || night == 0) {
     return 0;
