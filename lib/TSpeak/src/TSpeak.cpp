@@ -73,7 +73,7 @@ void TSpeak::download(int read_data_length, int * FieldNumber, float * data, con
   
   for (int i = 0; i < read_data_length; i++ ){
     data[i] = ThingSpeak.readFloatField(Channel_ID_2, FieldNumber[i], myReadAPIKey_2);
-    //Serial.println("Data from ThingSpeak field number: " + String(FieldNumber[i]) + " and data " + String(data[i]));  
+    Serial.println("Data from ThingSpeak field number: " + String(FieldNumber[i]) + " and data " + String(data[i]));  
   }
   
 }

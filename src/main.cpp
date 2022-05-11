@@ -82,8 +82,8 @@ TSpeak thingSpeak;
 TSpeak thingSpeak2;
 DHT dht(DHTPIN, DHTTYPE);
 
-//Adafruit_MLX90614 mlx;
-IRTherm therm; // Create an IRTherm object to interact with throughout
+Adafruit_MLX90614 mlx;
+//IRTherm therm; // Create an IRTherm object to interact with throughout
 AuroraPoints auror;
 
 
@@ -129,13 +129,13 @@ float get_cloud_value() {
   float temp_diff = tempOC - clear_sky_temp;
   float cloud_factor = temp_diff/30;
         if (cloud_factor < 0) {
-            return 0;
-        }
-        else if (cloud_factor > 1) {
             return 1;
         }
+        else if (cloud_factor > 1) {
+            return 0;
+        }
         else {
-            return cloud_factor;
+            return 1 - cloud_factor;
         }
 
 }
@@ -180,27 +180,31 @@ void collecting_data_from_sensors(){
   
   TCA9548A(5);
   float cloud = get_cloud_value();
+  data2[0] = cloud;
   Serial.println("Cloud value: " + String(cloud));
 
-  data2[0] = auror.get_aurora_points(data[5],data[6],data[3],data[2],cloud, night, _557_weight, fraction_weight);
-  Serial.println("Aurora points: " + String(data2[0]));
-
+  float aurora = auror.get_aurora_points(data[5],data[6],data[3],data[2],cloud, night, _557_weight, fraction_weight);
+  Serial.println("Aurora points: " + String(aurora));
+  delay(200);
   TCA9548A(5);
   float x;  
-  //x = mlx.readAmbientTempC();
-  if (therm.read()) { // On success, read() will return 1, on fail 0.
-    x = therm.ambient();
+  x = mlx.readAmbientTempC();
+  x = mlx.readAmbientTempC();
+  if (!isnan(x)) { // On success, read() will return 1, on fail 0.
+    
+    //x = therm.ambient();
     Serial.println("Ambient temperature: " + String(x));
     tempAC = x;
   }
   
   data[0] = tempAC;
-
+  delay(200);
   TCA9548A(5);
   float y; 
-  //y = mlx.readObjectTempC();
-  if (therm.read()) {
-    y = therm.object();
+  y = mlx.readObjectTempC();
+  y = mlx.readObjectTempC();
+  if ( !isnan(y)) {
+    //y = therm.object();
     
     // Adjusting crasy sensor
     tempOC = y*temp_k + temp_b;
@@ -235,7 +239,9 @@ void setup() {
   dht.begin();
   Wire.begin(sda, scl);
   TCA9548A(5);
-  //mlx.begin();
+  //therm.begin();
+  mlx.begin();
+  /*
   if (therm.begin() == false){ // Initialize thermal IR sensor
     Serial.println("Qwiic IR thermometer did not acknowledge! Freezing!");
     while(1);
@@ -245,7 +251,7 @@ void setup() {
   therm.setUnit(TEMP_C); // Set the library's units to Farenheit
   therm.setEmissivity(emissivity);
   Serial.println("Emissivity: " + String(therm.readEmissivity()));
-  
+  */
   for (int i = 0; i < number_of_sensors; i++) {
     delay(2000);
     TCA9548A(i+2);
@@ -268,12 +274,14 @@ void loop() {
   thingSpeak.connect_to_internet();   // Connect to internet and ThingSpeak
   collecting_data_from_sensors();     // Collect data from sensors
   thingSpeak.download(read_data_length, read_field_value, read_data, myReadAPIKey_2, Channel_ID_2);
+  /*
   if (emissivity != read_data[0]) {
     emissivity = read_data[0];
     TCA9548A(5);
-    therm.setEmissivity(emissivity);
-    Serial.println("Emissivity is changed to: " + String(therm.readEmissivity()));
-  }
+    mlx.writeEmissivity(emissivity);
+    TCA9548A(5);
+    Serial.println("Emissivity is changed to: " + String(mlx.readEmissivity()));
+  }*/
   
   night = read_data[1];
   temp_k = read_data[2];
