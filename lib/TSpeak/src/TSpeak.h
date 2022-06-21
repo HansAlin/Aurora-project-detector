@@ -12,10 +12,10 @@ class TSpeak{
   
   public:
     TSpeak();
-    void initiate(const char * ssid, const char * pass, const int dataPoints, const char * myWriteAPIKey, const char * myReadAPIKey, unsigned long Channel_ID, WiFiClient  &client);
+    void initiate(const char * ssid, const char * pass, const char * myWriteAPIKey, const char * myReadAPIKey, unsigned long Channel_ID, WiFiClient  &client);
     void connect_to_internet();
-    void upload(float data[], bool single, int field);
-    void download(int read_data_length, int * FieldNumber, float * data, const char * myReadAPIKey_2, unsigned long Channel_ID_2);
+    void upload(float data[], int * fieldNumber, int dataPoints);
+    void download(int read_data_length, int * fieldNumber, float * data);
     void disconnect_internet();
     void sleep(int sleepmin);
   

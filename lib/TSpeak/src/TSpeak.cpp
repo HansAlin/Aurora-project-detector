@@ -9,7 +9,7 @@
 TSpeak::TSpeak() {
 }
 
-void TSpeak::initiate(const char * ssid, const char * pass, const int dataPoints, const char * myWriteAPIKey, const char * myReadAPIKey, unsigned long Channel_ID, WiFiClient  &client ) {
+void TSpeak::initiate(const char * ssid, const char * pass, const char * myWriteAPIKey, const char * myReadAPIKey, unsigned long Channel_ID, WiFiClient  &client ) {
   
   //WiFiClient  client;
   WiFi.mode(WIFI_STA);
@@ -17,7 +17,6 @@ void TSpeak::initiate(const char * ssid, const char * pass, const int dataPoints
   
   _ssid = ssid;
   _pass = pass;
-  _dataPoints = dataPoints;
   _myWriteAPIKey = myWriteAPIKey; 
   _myReadAPIKey = myReadAPIKey;
   _Channel_ID = Channel_ID;
@@ -39,22 +38,16 @@ void TSpeak::connect_to_internet() {
   }
 }
 
-void TSpeak::upload(float data[], bool single, int field) {
-  //WiFiClient  client;
+void TSpeak::upload(float data[],int * fieldNumber, int dataPoints) {
+  
   ThingSpeak.begin(_client);
   Serial.println("Upload data to ThingSpeak");
-  if(single){
-    ThingSpeak.setField(field,data[0]);
-  }
-  else {
-    for(int i = 0; i < _dataPoints; i++){
-    ThingSpeak.setField((i + 1), data[i]);
-    }
-  }
-
   
-  //Serial.println("Write fields");
-  int x = ThingSpeak.writeFields(_Channel_ID, _myWriteAPIKey);    //(
+  for(int i = 0; i < dataPoints; i++){
+  ThingSpeak.setField((fieldNumber[i]), data[i]);
+  }
+  
+  int x = ThingSpeak.writeFields(_Channel_ID, _myWriteAPIKey);   
   
   if(x  == 200){
     Serial.println("Channel update successful.");
@@ -66,14 +59,14 @@ void TSpeak::upload(float data[], bool single, int field) {
 }
 
 
-void TSpeak::download(int read_data_length, int * FieldNumber, float * data, const char * myReadAPIKey_2, unsigned long Channel_ID_2) {
+void TSpeak::download(int read_data_length, int * fieldNumber, float * data) {
   //WiFiClient  client;
   Serial.println("Downloading " + String(read_data_length) +" number of data from ThingSpeak");
   ThingSpeak.begin(_client);
   
   for (int i = 0; i < read_data_length; i++ ){
-    data[i] = ThingSpeak.readFloatField(Channel_ID_2, FieldNumber[i], myReadAPIKey_2);
-    Serial.println("Data from ThingSpeak field number: " + String(FieldNumber[i]) + " and data " + String(data[i]));  
+    data[i] = ThingSpeak.readFloatField(_Channel_ID, fieldNumber[i], _myReadAPIKey);
+    Serial.println("Data from ThingSpeak field number: " + String(fieldNumber[i]) + " and data " + String(data[i]));  
   }
   
 }

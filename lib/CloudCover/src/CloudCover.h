@@ -1,17 +1,35 @@
 #include "Arduino.h"
 #include <Wire.h>
-
+#include "DHT.h"
+#include "Adafruit_MLX90614.h"
+#include <Adafruit_I2CDevice.h>
+#include "SPI.h"
 
 #ifndef CloudCover_h
 #define CloudCover_h
+
+#define DHTPIN 2     // Digital pin connected to the DHT sensor
+#define DHTTYPE DHT11   // DHT 11
 
 class CloudCover {
   public:
     CloudCover();
     void begin();
-    float get_cloud_value(float temp_adjust, float w_1);
+    float get_cloud_value(float cloud_value_scale);
+    float get_sensor_temp();
+    float get_humidty();
 
   private:
+      float clear_sky_temp();
+      Adafruit_MLX90614 mlx;
+      DHT dht;
+      float measured_sky_temp;
+      float calculated_sky_temp;
+      float cloud_value;
+      float temperature;
+      float humidity;
+      float ambientTemp;
+      float objectTemp;
       
 
 
