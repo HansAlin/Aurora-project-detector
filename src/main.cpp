@@ -17,15 +17,15 @@
 
 
 //------- WI-FI details ----------//
-const char * ssid = "ASUS_50_2G"; //SSID here           AndroidAP             Xperia
-const char * pass = "jugenjon"; // Passowrd here        l@ngdrag00          l@ngdrag00      
+const char * ssid = "SSID here"; //      
+const char * pass = "Passowrd here"; //    
 //--------------------------------// 
 
 //----------- Channel settings      ----------------//
 // Channel most for writing to ThingSpeak
-unsigned long Channel_ID = 1636584; // Channel ID  collecting data
-const char  * myWriteAPIKey = "LA81E3TBW06I54EY"; //Write API key
-const char  * myReadAPIKey = "L6WSL9CU11VHP4NF";   //Read API key 
+unsigned long Channel_ID = <Channel ID>; //   collecting data
+const char  * myWriteAPIKey = "Write API key"; //
+const char  * myReadAPIKey = "Read API key ";   //
 //-------------------------------------------//
 
 
