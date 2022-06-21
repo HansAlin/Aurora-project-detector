@@ -23,7 +23,7 @@ const char * pass = "Passowrd here"; //
 
 //----------- Channel settings      ----------------//
 // Channel most for writing to ThingSpeak
-unsigned long Channel_ID = <Channel ID>; //   collecting data
+unsigned long Channel_ID = <Channel ID>; //  number values
 const char  * myWriteAPIKey = "Write API key"; //
 const char  * myReadAPIKey = "Read API key ";   //
 //-------------------------------------------//
