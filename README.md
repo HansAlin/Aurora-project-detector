@@ -22,5 +22,5 @@ Consists of a MLX90614, infrared thermometer and a DHT11, humidity sensor, was u
 # Optical components
 # Multy-layer interference filter
 To filter out the green, 557 nm light, a multi-layer interference filter with a 10 nm bandwidth centered at 557 nm was used. 
-<img sec="Pictures/Filter_on_box.JPG" width=50% height=50%>
-<img sec="Pictures/Filter.png" width=50% height=50%>
+<img src="Pictures/Filter_on_box.JPG" width=50% height=50%>
+<img src="Pictures/Filter.png" width=50% height=50%>
