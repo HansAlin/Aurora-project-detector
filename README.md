@@ -26,4 +26,5 @@ To filter out the green, 557 nm light, a multi-layer interference filter with a 
 <img src="Pictures/Filter.png" width=50% height=50%>
 
 # All together
-
+<img src="Pictures/OPEN_BOX.JPG" width=50% height=50%>
+<img src="Pictures/Box.JPG" width=50% height=50%>
