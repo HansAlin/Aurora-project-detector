@@ -3,7 +3,11 @@
 #include <ThingSpeak.h>
 #include "TSpeak.h"
 #include <ESP8266WiFi.h>
-
+/*************************************
+ * This class takes care of the communication with internet and ThingSpeak
+ * Most of code is comming from https://github.com/mathworks/thingspeak-arduino
+ * 
+ */
 
 
 TSpeak::TSpeak() {
@@ -39,7 +43,13 @@ void TSpeak::connect_to_internet() {
 }
 
 void TSpeak::upload(float data[],int * fieldNumber, int dataPoints) {
-  
+  /**
+   * @brief This functin upload the data to ThingSpeak
+   * @arg data is an array with data values
+   * @arg filedNumber is an array with the fields that are going to be
+   * updated in ThingSpeak
+   * @arg dataPoints are the number of data points uploaded
+   */
   ThingSpeak.begin(_client);
   Serial.println("Upload data to ThingSpeak");
   
@@ -55,12 +65,18 @@ void TSpeak::upload(float data[],int * fieldNumber, int dataPoints) {
   else{
     Serial.println("Problem updating channel. HTTP error code " + String(x));
   }
-  delay(1000);         // Shortest time between updates. Depends on subscription at ThingSpeak
+  delay(1000);   // Shortest time between updates. Depends on subscription at ThingSpeak
 }
 
 
 void TSpeak::download(int read_data_length, int * fieldNumber, float * data) {
-  //WiFiClient  client;
+  /**
+   * @brief This function download data from ThingSpeak 
+   * @arg read_data_lenght is the number of data being down loaded
+   * @arg fieldNumber are an array of the fields being downloaded from ThingSpeak
+   * @arg data as an array containing the data
+   * 
+   */
   Serial.println("Downloading " + String(read_data_length) +" number of data from ThingSpeak");
   ThingSpeak.begin(_client);
   

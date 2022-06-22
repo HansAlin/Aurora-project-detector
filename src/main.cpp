@@ -1,13 +1,14 @@
-#include <Arduino.h>
+#include <Arduino.h>     // Needed when working Platform io
 // ----------(c) Electronics-project-hub-------- //
 //        Program for ESP8266 D1 MINI
 //        
 // Libraries
 #include <ESP8266WiFi.h>
-#include <Wire.h>
-#include <Adafruit_Sensor.h>
-#include "Adafruit_TSL2591.h"
-#include "SPI.h"
+// #include <Wire.h>
+// #include <Adafruit_I2CDevice.h>
+// #include <Adafruit_Sensor.h>
+// #include "Adafruit_TSL2591.h"
+// #include "SPI.h"
 
 // Libraries for this project
 #include "AuroraPoints.h"
@@ -23,7 +24,7 @@ const char * pass = "Passowrd here"; //
 
 //----------- Channel settings      ----------------//
 // Channel most for writing to ThingSpeak
-unsigned long Channel_ID = <Channel ID>; //   collecting data
+unsigned long Channel_ID = 11111111; //   collecting data
 const char  * myWriteAPIKey = "Write API key"; //
 const char  * myReadAPIKey = "Read API key ";   //
 //-------------------------------------------//
@@ -39,22 +40,22 @@ float write_data[write_data_length];
 
 //  Reading from ThingSpeak
 int read_fields[] = {5,6,7,8}; // fields thats is recived from ThingSpeak
-const int read_data_length = 3;
+const int read_data_length = 4;
 float read_data[read_data_length];
-
+#define DHTPIN 2 
 int delayTime = 0;            // Initial delay time for microcontroler 
 int sda = 4;                  // Pin on D1 MINI D2 on board ESP8266
 int scl = 5;                  // Pin on D1 MINI D1 on board ESP8266
 byte address = 0x29;          // I2c address to sensor
-float sleeping;                   // If module going to sleep
-int sleepmin = 1;            // TODO set to sleeps in 20 min
-unsigned int raw;            // Reading value from A0 analog pin
+float sleeping;               // If module going to sleep
+int sleepmin = 1;             // TODO set to sleeps in 20 min
+unsigned int raw;             // Reading value from A0 analog pin
 float max_voltage = 4.1;      // Max voltage on battery
 const int number_of_sensors = 2;
-int night = 0;                    // Returning night veto value from thingSpeak 0=day 1=night
+int night = 0;                // Returning night veto value from thingSpeak 0=day 1=night
 
-float weight_557;
-float weight_fraction;
+float weight_557 = 1.75;             // Weighting factor to aurora points
+float weight_fraction = 150;        // Weighting factor to aurora points       
 
 float clear_sky_temp;
 float cloud_value_scale = 30;  // Scaling the output from get_cloud_value 20 - 40 should work
@@ -63,7 +64,7 @@ float cloud_value_scale = 30;  // Scaling the output from get_cloud_value 20 - 4
 WiFiClient  client;
 
 TSL2591 tsl2591[number_of_sensors] = {TSL2591(), TSL2591()} ;
-CloudCover cc;
+CloudCover cc(DHTPIN);
 TSpeak thingSpeak;
 AuroraPoints auror;
 
@@ -84,9 +85,9 @@ void collecting_data_from_sensors(){
   // Sensor 1 557 nm filter
   TCA9548A(3);
   tsl2591[0].advancedRead(values);
-  float lux_557 = values[0]; // is Lux from sensor
-  float IR_557 = values[1]; // is the IR value from sensor 
-  float full_557 = values[2]; // is the full value from senor 
+  float lux_557 = values[0];    // is Lux from sensor
+  float IR_557 = values[1];     // is the IR value from sensor 
+  float full_557 = values[2];   // is the full value from senor 
   Serial.println("Lux from sensor 1 :" + String(lux_557)); 
   Serial.println("IR from sensor 1 :" + String(IR_557));
   Serial.println("Full from sensor 1 :" + String(full_557)); 
@@ -94,9 +95,9 @@ void collecting_data_from_sensors(){
   // Sensor 2 without filter
   TCA9548A(4);
   tsl2591[1].advancedRead(values);
-  float lux = values[0]; // is Lux from sensor
-  float IR =  values[1]; //is the IR value from sensor 
-  float full = values[2]; // is the full value from senor
+  float lux = values[0];        // is Lux from sensor
+  float IR =  values[1];        //is the IR value from sensor 
+  float full = values[2];       // is the full value from senor
   Serial.println("Lux from sensor 2 :" + String(lux)); 
   Serial.println("IR from sensor 2 :" + String(IR));
   Serial.println("Full from sensor 2 :" + String(full)); 
@@ -112,6 +113,8 @@ void collecting_data_from_sensors(){
   float temp_at_sensor = cc.get_sensor_temp();
   float humidity = cc.get_humidty();
   Serial.println("Cloud value: " + String(cloud));
+  Serial.println("Temerature at detector: " + String(temp_at_sensor));
+  Serial.println("Humidity value: " + String(humidity));
 
   float aurora_point = auror.get_aurora_points(IR, full, full_557, cloud, night, weight_557, weight_fraction );
   Serial.println("Aurora points: " + String(aurora_point));
@@ -168,10 +171,10 @@ void loop() {
   collecting_data_from_sensors();     // Collect data from sensors
   thingSpeak.download(read_data_length, read_fields, read_data);
  
-  night = read_data[1];
-  cloud_value_scale = read_data[2];
-  weight_557 = read_data[3];
-  weight_fraction = read_data[4];
+  night = read_data[0];
+  cloud_value_scale = read_data[1];
+  weight_557 = read_data[2];
+  weight_fraction = read_data[3];
 
   thingSpeak.upload(write_data, write_fields, write_data_length );            // Upload to ThingSpeak
   
