@@ -1,7 +1,3 @@
 # Aurora-project-detector
-This is code to my thesis work at Linnaeus University.
-
-It contains code to the detector.
-After the I cleaned up the code I did get some issues that I have not solved yet.
-
-I will soon add an explaination have to implement the code on an device.
+Aurora is a light phenomenon in the night sky that fascinates many people. This project has aimed to develop a detector that can send alerts to users and tell whether or not there is an aurora event. Many want to see the aurora, but not as many want to stay up all night to have the chance to see them. 
+By using a multi-layer interference filter in front of a photodiode on a single Complementary metal-oxide-semiconductor, CMOS, available on the market, I have managed to produce a detector that gives promising results regarding the ability to at least distinguish intense aurora events. 
