@@ -27,6 +27,5 @@ To filter out the green, 557 nm light, a multi-layer interference filter with a 
 
 # All together
 <img src="Pictures/OPEN_BOX.JPG" width=50% height=50%>
-<img src="Pictures/Box.png" width=50% height=50%>
 <img src="Pictures/Schematic_Aurora detector without gsm 1_2022-05-24.png" width=50% height=50%>
 <img src="Pictures/hardware_setup.png" width=50% height=50%
