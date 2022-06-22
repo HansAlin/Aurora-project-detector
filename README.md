@@ -8,7 +8,7 @@ WEMOS D1 MINI
 # Light sensors TSL2591
 The TSL2591 is a sensor with a photodiode on an integrated circuit from AMS. Available on a development break-out board from Adafruit.
 Two sensors were appplied. One with a interferense filter in front of and one without.
-<img src="Pictures/TSL2591_(2).JPG" width=50% height=50%>
+<img src="Pictures/TSL2591 (2).JPG" width=50% height=50%>
 There is an green led on the board that I coverd with black melting glue.
 # Multiplexer TCA9548A
 The light sensors have same I2C address which means that a mutiplexer is needed in order to distribute the signals to the light sensors.
@@ -22,4 +22,5 @@ Consists of a MLX90614, infrared thermometer and a DHT11, humidity sensor, was u
 # Optical components
 # Multy-layer interference filter
 To filter out the green, 557 nm light, a multi-layer interference filter with a 10 nm bandwidth centered at 557 nm was used. 
-<img sec="Pictures/
+<img sec="Pictures/Filter_on_box.JPG" width=50% height=50%>
+<img sec="Pictures/Filter.png" width=50% height=50%>
