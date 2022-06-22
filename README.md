@@ -4,7 +4,8 @@ By using a multi-layer interference filter in front of a photodiode on a single 
 # Electrical components
 # Microcontroller
 WEMOS D1 MINI
-[[https://user-images.githubusercontent.com/90710177/174956911-271bcadf-524d-4759-b445-734195778e47.JPG | width=100px]]
+![WEMOS_D1_MINI](https://user-images.githubusercontent.com/90710177/174959602-9422e796-ac09-42ac-bb08-07a43ab6d20e.JPG)
+<img src=
 # Light sensors TSL2591
 The TSL2591 is a sensor with a photodiode on an integrated circuit from AMS. Available on a development break-out board from Adafruit.
 Two sensors were appplied. One with a interferense filter in front of and one without.![TSL2591 (2)](https://user-images.githubusercontent.com/90710177/174957303-da9ee40a-dd40-4470-b88a-274c8a069c3d.JPG)
