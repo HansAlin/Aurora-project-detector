@@ -2,7 +2,7 @@
 /* Dynamic Range: 600M:1 */
 /* Maximum Lux: 88K */
 #include "Arduino.h"
-#include <Wire.h>
+//#include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include "Adafruit_TSL2591.h"
 #include "SPI.h"
@@ -20,6 +20,7 @@
 class TSL2591 {
   public:
     TSL2591();
+    void begin(TwoWire &theWire, uint8_t addr);
     void displaySensorDetails(void);
     void configureSensor(int gain, int intTime);
     float simpleRead();
@@ -27,7 +28,9 @@ class TSL2591 {
     void unifiedSensorAPIRead(void);
     void sleep();
     void awake();
+    
   private:
     Adafruit_TSL2591 tsl;
+    TwoWire *I2C_wire;
 };
 #endif

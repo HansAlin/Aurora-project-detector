@@ -34,8 +34,23 @@
 // connect GROUND to common ground
 
 TSL2591::TSL2591() {
-  Adafruit_TSL2591 tsl = Adafruit_TSL2591(1); // 2591 pass in a number for the sensor identifier (for your use later)
+  Adafruit_TSL2591 tsl = Adafruit_TSL2591(2591); // 2591 pass in a number for the sensor identifier (for your use later)
 } 
+
+void TSL2591::begin(TwoWire &theWire, uint8_t addr) {
+  I2C_wire = &theWire;
+  Serial.println(F("Starting Adafruit TSL2591 Test!"));
+  
+  if (tsl.begin(I2C_wire, addr)) 
+  {
+    Serial.println(F("Found a TSL2591 sensor"));
+  } 
+  else 
+  {
+    Serial.println(F("No sensor found ... check your wiring?"));
+    while (1);
+  }
+}
 
 /**************************************************************************/
 /*
@@ -69,7 +84,9 @@ void TSL2591::displaySensorDetails(void)
 */
 /**************************************************************************/
 void TSL2591::configureSensor(int gain, int intTime)
-{
+{ 
+  
+  
   switch (gain)
   {
   case 1:

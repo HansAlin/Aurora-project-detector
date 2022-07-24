@@ -92,5 +92,5 @@ void TSpeak::disconnect_internet() {
 }
 
 void TSpeak::sleep(int sleepsec) {
-  ESP.deepSleep(sleepsec * 1000000); // Adjusting to get 1 min sleep   
+  ESP.deepSleep(sleepsec * 1000000 - 17*1000000); // Adjusting to get 1 min sleep   
 }

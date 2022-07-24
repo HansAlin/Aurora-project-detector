@@ -1,5 +1,5 @@
 #include "Arduino.h"
-#include <Wire.h>
+//#include <Wire.h>
 #include <Adafruit_I2CDevice.h>
 #include <Adafruit_MLX90614.h>
 #include "SPI.h"
@@ -16,10 +16,11 @@ class CloudCover {
   public:
     
     CloudCover(int DHTPIN);
-    void begin();
+    void begin(TwoWire &theWire, uint8_t addr);
     float get_cloud_value(float cloud_value_scale);
     float get_sensor_temp();
     float get_humidty();
+    //void sleep();
 
   private:
       float clear_sky_temp();
@@ -32,6 +33,7 @@ class CloudCover {
       float humidity;
       float ambientTemp;
       float objectTemp;
+      TwoWire *I2C_wire;
       
 
 

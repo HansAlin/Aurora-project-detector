@@ -16,22 +16,21 @@
 #include "TSL2591.h"
 #include "CloudCover.h"
 
-
+#define MLX90614_I2CADDR 0x5A
+#define DHTPIN 2 
+#define TSL2591_I2CADDR 0x29  // I2c address to light sensor
 //------- WI-FI details ----------//
-const char * ssid = "SSID here"; //      
-const char * pass = "Passowrd here"; //    
+const char * ssid = "ASUS_50_2G"; //      
+const char * pass = "jugenjon"; //    
 //--------------------------------// 
 
 //----------- Channel settings      ----------------//
 // Channel most for writing to ThingSpeak
-unsigned long Channel_ID = 11111111; //   collecting data
-const char  * myWriteAPIKey = "Write API key"; //
-const char  * myReadAPIKey = "Read API key ";   //
+unsigned long Channel_ID = 1636584; //   collecting data
+const char  * myWriteAPIKey = "LA81E3TBW06I54EY"; //
+const char  * myReadAPIKey = "L6WSL9CU11VHP4NF";   //
 //-------------------------------------------//
 
-
-//TODO To sunset and sunrise calculations does not work
-// during some periods.
 
 // Write to ThingSpeak
 int write_fields[] = {1,2,3,4};
@@ -42,13 +41,12 @@ float write_data[write_data_length];
 int read_fields[] = {5,6,7,8}; // fields thats is recived from ThingSpeak
 const int read_data_length = 4;
 float read_data[read_data_length];
-#define DHTPIN 2 
+
 int delayTime = 0;            // Initial delay time for microcontroler 
 int sda = 4;                  // Pin on D1 MINI D2 on board ESP8266
 int scl = 5;                  // Pin on D1 MINI D1 on board ESP8266
-byte address = 0x29;          // I2c address to sensor
 float sleeping;               // If module going to sleep
-int sleepmin = 1;             // TODO set to sleeps in 20 min
+int sleepmin = 2;             // TODO set to sleeps in 20 min
 unsigned int raw;             // Reading value from A0 analog pin
 float max_voltage = 4.1;      // Max voltage on battery
 const int number_of_sensors = 2;
@@ -82,25 +80,29 @@ void collecting_data_from_sensors(){
     
   float values[3];  // Array to collecting data from TSL2591 sensors
  
-  // Sensor 1 557 nm filter
-  TCA9548A(3);
-  tsl2591[0].advancedRead(values);
-  float lux_557 = values[0];    // is Lux from sensor
-  float IR_557 = values[1];     // is the IR value from sensor 
-  float full_557 = values[2];   // is the full value from senor 
-  Serial.println("Lux from sensor 1 :" + String(lux_557)); 
-  Serial.println("IR from sensor 1 :" + String(IR_557));
-  Serial.println("Full from sensor 1 :" + String(full_557)); 
-
-  // Sensor 2 without filter
+  // Sensor 3 without filter named on container
+  Serial.println("Values from sensor without filter (sensor 3) ");
   TCA9548A(4);
+  tsl2591[0].advancedRead(values);
+  float lux = values[0];    // is Lux from sensor
+  float IR = values[1];     // is the IR value from sensor 
+  float full = values[2];   // is the full value from senor 
+   // Writes in previous operation
+  // Serial.println("Lux from sensor 3 :" + String(lux)); 
+  // Serial.println("IR from sensor 3 :" + String(IR));
+  // Serial.println("Full from sensor 3 :" + String(full)); 
+
+  // Sensor 2 with filter named on container
+  Serial.println("Values from sensor with filter (sensor 2) ");
+  TCA9548A(3);
   tsl2591[1].advancedRead(values);
-  float lux = values[0];        // is Lux from sensor
-  float IR =  values[1];        //is the IR value from sensor 
-  float full = values[2];       // is the full value from senor
-  Serial.println("Lux from sensor 2 :" + String(lux)); 
-  Serial.println("IR from sensor 2 :" + String(IR));
-  Serial.println("Full from sensor 2 :" + String(full)); 
+  float lux_557 = values[0];        // is Lux from sensor
+  float IR_557 =  values[1];        //is the IR value from sensor 
+  float full_557 = values[2];       // is the full value from senor
+  // Writes in previous operation
+  // Serial.println("Lux from sensor 2 :" + String(lux_557)); 
+  // Serial.println("IR from sensor 2 :" + String(IR_557));
+  // Serial.println("Full from sensor 2 :" + String(full_557)); 
   
 
   // Voltage on battery
@@ -108,22 +110,28 @@ void collecting_data_from_sensors(){
   float voltage = max_voltage*raw/1023;
   Serial.println("Voltage on battery: " + String(voltage));
   
-  TCA9548A(5);
-  float cloud = cc.get_cloud_value(cloud_value_scale);
-  float temp_at_sensor = cc.get_sensor_temp();
-  float humidity = cc.get_humidty();
-  Serial.println("Cloud value: " + String(cloud));
-  Serial.println("Temerature at detector: " + String(temp_at_sensor));
-  Serial.println("Humidity value: " + String(humidity));
+  // TCA9548A(5);
+  // float cloud = cc.get_cloud_value(cloud_value_scale);
+  // float temp_at_sensor = cc.get_sensor_temp();
+  // float humidity = cc.get_humidty();
+  // Serial.println("Cloud value: " + String(cloud));
+  // Serial.println("Temerature at detector: " + String(temp_at_sensor));
+  // Serial.println("Humidity value: " + String(humidity));
 
-  float aurora_point = auror.get_aurora_points(IR, full, full_557, cloud, night, weight_557, weight_fraction );
-  Serial.println("Aurora points: " + String(aurora_point));
+  // float aurora_point = auror.get_aurora_points(IR, full, full_557, cloud, night, weight_557, weight_fraction );
+  // Serial.println("Aurora points: " + String(aurora_point));
   
   // Data to ThingSpeak
-  write_data[0] = full_557;   
+  write_data[0] = full_557;
+  Serial.println("Data to ThingSpeak field number: 1 and data " + String(full_557));    
   write_data[1] = full;
-  write_data[2] = voltage;
-  write_data[3] = aurora_point;
+  Serial.println("Data to ThingSpeak field number: 2 and data " + String(full)); 
+  // TODO change back to voltage 
+  write_data[2] = voltage; 
+  Serial.println("Data to ThingSpeak field number: 3 and data " + String(voltage)); 
+   
+  write_data[3] = voltage;
+  Serial.println("Data to ThingSpeak field number: 4 and data " + String(voltage));  
 }
 
 
@@ -132,11 +140,19 @@ void collecting_data_from_sensors(){
 void sleep(int sleepsec) {
   Serial.println("System sleeps for " + String(sleepsec/60) + " minutes");
   
-  TCA9548A(3);
-  tsl2591[0].sleep();
   TCA9548A(4);
+  tsl2591[0].sleep();
+  TCA9548A(3);
   tsl2591[1].sleep();
+  // TCA9548A(5);
+  // cc.sleep();
+
   thingSpeak.sleep(sleepsec);
+
+  TCA9548A(3);
+  tsl2591[1].awake();
+  TCA9548A(4);
+  tsl2591[0].awake();
 
   //TODO implement deepsleep for MLX90614
 }
@@ -144,18 +160,25 @@ void sleep(int sleepsec) {
 
 
 void setup() {
-  
+  Serial.begin(9600);
+  // Serial.println("Set-up!");
   Wire.begin(sda, scl);
-
-  TCA9548A(5);
-  cc.begin();
+  
+  
   
   delay(2000);
-  TCA9548A(2);
+  TCA9548A(4);
+  tsl2591[0].begin(Wire, TSL2591_I2CADDR);
   tsl2591[0].configureSensor(9876, 600);
   delay(2000);
+
   TCA9548A(3);
+  tsl2591[1].begin(Wire, TSL2591_I2CADDR);
   tsl2591[1].configureSensor(9876, 600);
+  delay(2000);
+
+  TCA9548A(5);
+  cc.begin(Wire, MLX90614_I2CADDR);
   
   thingSpeak.initiate(ssid, pass, myWriteAPIKey, myReadAPIKey, Channel_ID, client);
   delay(2000);
@@ -165,7 +188,7 @@ void setup() {
 
 void loop() {
   
-  delay(20000);
+  delay(2000);
   
   thingSpeak.connect_to_internet();   // Connect to internet and ThingSpeak
   collecting_data_from_sensors();     // Collect data from sensors
@@ -178,9 +201,9 @@ void loop() {
 
   thingSpeak.upload(write_data, write_fields, write_data_length );            // Upload to ThingSpeak
   
-  if (night == 0) {
-    sleep(sleepmin);
-  }
+  // if (night == 0) {
+  //   sleep(sleepmin*60);
+  // }
 }
  
 

@@ -24,11 +24,12 @@ CloudCover::CloudCover(int DHTPIN): dht(DHTPIN, DHT11) {
   
 }
 
-void CloudCover::begin() {
+void CloudCover::begin(TwoWire &theWire, uint8_t addr) {
+  Serial.println("Address mlx " + String(addr));
   dht.begin();
-  
+  I2C_wire = &theWire;
   // init sensor
-  if (!mlx.begin()) {
+  if (!mlx.begin(addr, I2C_wire)) {
     Serial.println("Error connecting to MLX sensor. Check wiring.");
     while (1);
   }
@@ -47,7 +48,6 @@ float CloudCover::clear_sky_temp() {
   float humidity = dht.readHumidity();
   // Read temperature as Celsius (the default)
   float temperature = dht.readTemperature();
-  float sky_temp;
   float vapor_pressure;
 
   // Check if any reads failed and exit early (to try again).
@@ -59,7 +59,7 @@ float CloudCover::clear_sky_temp() {
     vapor_pressure = humidity/100*6.11*pow(10,((7.5*temperature)/(273.3+temperature)));
     calculated_sky_temp = -31.1 + 0.417*temperature*sqrt(vapor_pressure);  
     Serial.println("Vapor pressure: " + String(vapor_pressure) + "mb");
-    Serial.println("Clear sky temperature: " + String(sky_temp) + "C ");
+    Serial.println("Clear sky temperature: " + String(calculated_sky_temp) + "C ");
 
   }
 
@@ -108,9 +108,17 @@ float CloudCover::get_cloud_value(float cloud_value_scale=30) {
 }
 
 float CloudCover::get_sensor_temp() {
-  return temperature;
+  return dht.readTemperature();
 }
 
 float CloudCover::get_humidty() {
-  return humidity;
+  return dht.readHumidity();
 }
+
+// void CloudCover::sleep() {
+//   I2C_wire.beginTransmission(byte(0x5A));
+//   I2C_wire.write(byte(0x00));
+//   I2C_wire.write(byte(0xFF));
+//   I2C_wire.write(byte(0xE8));
+//   I2C_wire.endTransmission();
+// }
