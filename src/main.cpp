@@ -20,15 +20,15 @@
 #define DHTPIN 2 
 #define TSL2591_I2CADDR 0x29  // I2c address to light sensor
 //------- WI-FI details ----------//
-const char * ssid = "ASUS_50_2G"; //      
-const char * pass = "jugenjon"; //    
+const char * ssid = "XXXXXXX"; //      
+const char * pass = "XXXX"; //    
 //--------------------------------// 
 
 //----------- Channel settings      ----------------//
 // Channel most for writing to ThingSpeak
-unsigned long Channel_ID = 1636584; //   collecting data
-const char  * myWriteAPIKey = "LA81E3TBW06I54EY"; //
-const char  * myReadAPIKey = "L6WSL9CU11VHP4NF";   //
+unsigned long Channel_ID = XXXXXXXX; //   collecting data
+const char  * myWriteAPIKey = "XXXXXXXX"; //
+const char  * myReadAPIKey = "XXXXXXXXX";   //
 //-------------------------------------------//
 
 
