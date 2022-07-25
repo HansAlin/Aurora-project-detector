@@ -23,13 +23,15 @@ CloudCover::CloudCover(int DHTPIN): dht(DHTPIN, DHT11) {
   float objectTemp = 0;
   
 }
-
-void CloudCover::begin(TwoWire &theWire, uint8_t addr) {
-  Serial.println("Address mlx " + String(addr));
+//TwoWire &theWire, uint8_t addr
+void CloudCover::begin(int sda, int scl) {
+  SDA = sda;
+  SCL = scl;
+  //Serial.println("Address mlx " + String(addr));
   dht.begin();
-  I2C_wire = &theWire;
-  // init sensor
-  if (!mlx.begin(addr, I2C_wire)) {
+  //I2C_wire = &theWire;
+  // init sensor addr, I2C_wire
+  if (!mlx.begin()) {
     Serial.println("Error connecting to MLX sensor. Check wiring.");
     while (1);
   }
@@ -115,10 +117,29 @@ float CloudCover::get_humidty() {
   return dht.readHumidity();
 }
 
-// void CloudCover::sleep() {
-//   I2C_wire.beginTransmission(byte(0x5A));
-//   I2C_wire.write(byte(0x00));
-//   I2C_wire.write(byte(0xFF));
-//   I2C_wire.write(byte(0xE8));
-//   I2C_wire.endTransmission();
-// }
+void CloudCover::sleep() {
+  Wire.beginTransmission(byte(0x5A));
+  Wire.write(byte(0x00));
+  Wire.write(byte(0xFF));
+  Wire.write(byte(0xE8));
+  Wire.endTransmission();
+
+  pinMode(SCL, OUTPUT);
+	digitalWrite(SCL, LOW);
+	pinMode(SDA, INPUT);
+}
+
+void CloudCover::wake() {
+  Wire.endTransmission(true);
+  pinMode(SCL, INPUT); // SCL high
+	pinMode(SDA, OUTPUT);
+	digitalWrite(SDA, LOW); // SDA low
+	delay(50); // delay at least 33ms
+	pinMode(SDA, INPUT); // SDA high
+	delay(250);
+	// PWM to SMBus mode:
+	pinMode(SCL, OUTPUT);
+	digitalWrite(SCL, LOW); // SCL low
+	delay(10); // Delay at least 1.44ms
+	pinMode(SCL, INPUT); // SCL high
+}

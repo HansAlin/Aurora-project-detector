@@ -46,7 +46,8 @@ int delayTime = 0;            // Initial delay time for microcontroler
 int sda = 4;                  // Pin on D1 MINI D2 on board ESP8266
 int scl = 5;                  // Pin on D1 MINI D1 on board ESP8266
 float sleeping;               // If module going to sleep
-int sleepmin = 2;             // TODO set to sleeps in 20 min
+int SLEEPSEC = 22;            // Short sleep during normal running
+int time_to_dusk;             // Time from ThingSpeak in minutes to dusk
 unsigned int raw;             // Reading value from A0 analog pin
 float max_voltage = 4.1;      // Max voltage on battery
 const int number_of_sensors = 2;
@@ -58,6 +59,8 @@ float weight_fraction = 150;        // Weighting factor to aurora points
 float clear_sky_temp;
 float cloud_value_scale = 30;  // Scaling the output from get_cloud_value 20 - 40 should work
 
+// TODO Make a temperature sensitive sleeping time, colder longer 
+// sleepingtime during operation.
 
 WiFiClient  client;
 
@@ -110,16 +113,16 @@ void collecting_data_from_sensors(){
   float voltage = max_voltage*raw/1023;
   Serial.println("Voltage on battery: " + String(voltage));
   
-  // TCA9548A(5);
-  // float cloud = cc.get_cloud_value(cloud_value_scale);
-  // float temp_at_sensor = cc.get_sensor_temp();
-  // float humidity = cc.get_humidty();
-  // Serial.println("Cloud value: " + String(cloud));
-  // Serial.println("Temerature at detector: " + String(temp_at_sensor));
-  // Serial.println("Humidity value: " + String(humidity));
+  TCA9548A(5);
+  float cloud = cc.get_cloud_value(cloud_value_scale);
+  float temp_at_sensor = cc.get_sensor_temp();
+  float humidity = cc.get_humidty();
+  Serial.println("Cloud value: " + String(cloud));
+  Serial.println("Temerature at detector: " + String(temp_at_sensor));
+  Serial.println("Humidity value: " + String(humidity));
 
-  // float aurora_point = auror.get_aurora_points(IR, full, full_557, cloud, night, weight_557, weight_fraction );
-  // Serial.println("Aurora points: " + String(aurora_point));
+  float aurora_point = auror.get_aurora_points(IR, full, full_557, cloud, night, weight_557, weight_fraction );
+  Serial.println("Aurora points: " + String(aurora_point));
   
   // Data to ThingSpeak
   write_data[0] = full_557;
@@ -127,11 +130,11 @@ void collecting_data_from_sensors(){
   write_data[1] = full;
   Serial.println("Data to ThingSpeak field number: 2 and data " + String(full)); 
   // TODO change back to voltage 
-  write_data[2] = voltage; 
-  Serial.println("Data to ThingSpeak field number: 3 and data " + String(voltage)); 
+  write_data[2] = humidity; 
+  Serial.println("Data to ThingSpeak field number: 3 and data " + String(humidity)); 
    
-  write_data[3] = voltage;
-  Serial.println("Data to ThingSpeak field number: 4 and data " + String(voltage));  
+  write_data[3] = aurora_point;
+  Serial.println("Data to ThingSpeak field number: 4 and data " + String(aurora_point));  
 }
 
 
@@ -144,15 +147,15 @@ void sleep(int sleepsec) {
   tsl2591[0].sleep();
   TCA9548A(3);
   tsl2591[1].sleep();
-  // TCA9548A(5);
-  // cc.sleep();
+  TCA9548A(5);
+  cc.sleep();
 
   thingSpeak.sleep(sleepsec);
 
-  TCA9548A(3);
-  tsl2591[1].awake();
-  TCA9548A(4);
-  tsl2591[0].awake();
+  // TCA9548A(3);
+  // tsl2591[1].awake();
+  // TCA9548A(4);
+  // tsl2591[0].awake();
 
   //TODO implement deepsleep for MLX90614
 }
@@ -161,49 +164,62 @@ void sleep(int sleepsec) {
 
 void setup() {
   Serial.begin(9600);
-  // Serial.println("Set-up!");
+  Serial.println("Set-up!");
+  delay(50);
   Wire.begin(sda, scl);
   
   
   
-  delay(2000);
+  delay(50);
+  Serial.println("Set-up sensor 3!");
   TCA9548A(4);
+  //
   tsl2591[0].begin(Wire, TSL2591_I2CADDR);
   tsl2591[0].configureSensor(9876, 600);
-  delay(2000);
+  delay(50);
 
+  Serial.println("Set-up sensor 2!");
   TCA9548A(3);
+  //
   tsl2591[1].begin(Wire, TSL2591_I2CADDR);
   tsl2591[1].configureSensor(9876, 600);
-  delay(2000);
+  delay(50);
 
+  Serial.println("Set-up DHT and MLX!");
   TCA9548A(5);
-  cc.begin(Wire, MLX90614_I2CADDR);
+  //Wire, MLX90614_I2CADDR
+  cc.begin(sda, scl);
   
   thingSpeak.initiate(ssid, pass, myWriteAPIKey, myReadAPIKey, Channel_ID, client);
-  delay(2000);
+  delay(50);
   pinMode(A0, INPUT);
-  delay(2000);
+  delay(50);
 }
 
 void loop() {
   
-  delay(2000);
+  delay(50);
   
   thingSpeak.connect_to_internet();   // Connect to internet and ThingSpeak
   collecting_data_from_sensors();     // Collect data from sensors
   thingSpeak.download(read_data_length, read_fields, read_data);
  
-  night = read_data[0];
+  time_to_dusk = read_data[0];
   cloud_value_scale = read_data[1];
   weight_557 = read_data[2];
   weight_fraction = read_data[3];
 
   thingSpeak.upload(write_data, write_fields, write_data_length );            // Upload to ThingSpeak
   
-  // if (night == 0) {
-  //   sleep(sleepmin*60);
-  // }
+  if (time_to_dusk < 0) {
+    // Night !
+    night = 1;
+    sleep(SLEEPSEC);
+  }
+  else {
+    night = 0;
+    sleep(time_to_dusk*60);
+  }
 }
  
 

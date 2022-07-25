@@ -16,11 +16,12 @@ class CloudCover {
   public:
     
     CloudCover(int DHTPIN);
-    void begin(TwoWire &theWire, uint8_t addr);
+    void begin(int sda, int scl);
     float get_cloud_value(float cloud_value_scale);
     float get_sensor_temp();
     float get_humidty();
-    //void sleep();
+    void sleep();
+    void wake();
 
   private:
       float clear_sky_temp();
@@ -33,7 +34,9 @@ class CloudCover {
       float humidity;
       float ambientTemp;
       float objectTemp;
-      TwoWire *I2C_wire;
+      int SDA;
+      int SCL;
+      
       
 
 

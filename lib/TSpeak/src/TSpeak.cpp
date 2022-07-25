@@ -65,7 +65,7 @@ void TSpeak::upload(float data[],int * fieldNumber, int dataPoints) {
   else{
     Serial.println("Problem updating channel. HTTP error code " + String(x));
   }
-  delay(1000);   // Shortest time between updates. Depends on subscription at ThingSpeak
+  delay(50);   // Shortest time between updates depends on subscription at ThingSpeak
 }
 
 
@@ -92,5 +92,5 @@ void TSpeak::disconnect_internet() {
 }
 
 void TSpeak::sleep(int sleepsec) {
-  ESP.deepSleep(sleepsec * 1000000 - 17*1000000); // Adjusting to get 1 min sleep   
+  ESP.deepSleep(sleepsec * 1000000 ); // Adjusting to get 1 min sleep   
 }
