@@ -27,23 +27,23 @@
 #define SENSOR_READ_CYCLES 5  // How often certain sensors should be readed
 
 //------- WI-FI details ----------//
-const char * ssid = "ASUS_50_2G" ; //     
-const char * pass = "jugenjon"; //    
+const char * ssid = "XXXXXX" ; //     
+const char * pass = "XXXXXX"; //    
 //--------------------------------// 
 
 //----------- Channel settings      ----------------//
 // Channel most for writing to ThingSpeak
-unsigned long Channel_ID  = 1636584; //  collecting data;
-const char  *myWriteAPIKey = "LA81E3TBW06I54EY"; // 
-const char *myReadAPIKey = "L6WSL9CU11VHP4NF";   // 
+unsigned long Channel_ID  = XXXXXXXX; //  collecting data;
+const char  *myWriteAPIKey = "XXXXXXXXXX"; // 
+const char *myReadAPIKey = "XXXXXXXXXXX";   // 
 //-------------------------------------------//
 
 // TODO remove after testing
 //----------- Test Channel settings      ----------------//
 // Channel most for writing to ThingSpeak
-unsigned long Channel_ID_2  = 1669919; //  collecting data;
-const char  *myWriteAPIKey_2 = "7RWCPY9QU55V9UZS"; // 
-const char *myReadAPIKey_2 = "LYRSAAYO3E6TRSIB";   // 
+unsigned long Channel_ID_2  = XXXXXXX; //  collecting data;
+const char  *myWriteAPIKey_2 = "XXXXXXXXX"; // 
+const char *myReadAPIKey_2 = "XXXXXXXXX";   // 
 //-------------------------------------------//
 
 // Write to ThingSpeak
