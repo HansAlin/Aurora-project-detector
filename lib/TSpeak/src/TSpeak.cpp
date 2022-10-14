@@ -3,6 +3,8 @@
 #include <ThingSpeak.h>
 #include "TSpeak.h"
 #include <ESP8266WiFi.h>
+#include <WiFiManager.h>
+
 /*************************************
  * This class takes care of the communication with internet and ThingSpeak
  * Most of code is comming from https://github.com/mathworks/thingspeak-arduino
@@ -13,32 +15,41 @@
 TSpeak::TSpeak() {
 }
 
-void TSpeak::initiate(const char * ssid, const char * pass, const char * myWriteAPIKey, const char * myReadAPIKey, unsigned long Channel_ID, WiFiClient  &client ) {
-  
-  //WiFiClient  client;
-  WiFi.mode(WIFI_STA);
+void TSpeak::initiate(const char *ssid, const char *pass, const char *WriteAPI, const char *ReadAPI, unsigned long Channel_ID, WiFiClient  &client ) {
   
   
   _ssid = ssid;
   _pass = pass;
-  _myWriteAPIKey = myWriteAPIKey; 
-  _myReadAPIKey = myReadAPIKey;
+  _myWriteAPIKey = WriteAPI; //.c_str(); 
+  _myReadAPIKey = ReadAPI; //.c_str();
   _Channel_ID = Channel_ID;
   _client = client;
+  
 }
 
 void TSpeak::connect_to_internet() {
- 
+
   // Connect or reconnect to WiFi
+  WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
+  
+
   if(WiFi.status() != WL_CONNECTED){
     Serial.print("Attempting to connect to SSID: ");
     Serial.println(_ssid);
+    // unsigned long time_limit = 20000;
+    // unsigned long start_time = millis();
+    
     while(WiFi.status() != WL_CONNECTED){
       WiFi.begin(_ssid, _pass);  
       Serial.print(".");
-      delay(5000);     
+      delay(5000);  
+      // if ((millis() - start_time) > time_limit) {
+      //   ESP.restart();
+      // }   
     } 
     Serial.println("\nConnected.");
+    
+    ThingSpeak.begin(_client);
   }
 }
 
@@ -50,7 +61,7 @@ void TSpeak::upload(float data[],int * fieldNumber, int dataPoints) {
    * updated in ThingSpeak
    * @arg dataPoints are the number of data points uploaded
    */
-  ThingSpeak.begin(_client);
+  
   Serial.println("Upload data to ThingSpeak");
   
   for(int i = 0; i < dataPoints; i++){
@@ -78,7 +89,7 @@ void TSpeak::download(int read_data_length, int * fieldNumber, float * data) {
    * 
    */
   Serial.println("Downloading " + String(read_data_length) +" number of data from ThingSpeak");
-  ThingSpeak.begin(_client);
+  
   
   for (int i = 0; i < read_data_length; i++ ){
     data[i] = ThingSpeak.readFloatField(_Channel_ID, fieldNumber[i], _myReadAPIKey);

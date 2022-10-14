@@ -1,5 +1,7 @@
 #include "Arduino.h"
 #include "CloudCover.h"
+#include <math.h>
+
 
 /***********************************************************
  * This library takes care of calculating cloud values from the cloud
@@ -13,30 +15,20 @@
 
  //TODO no default constructor exists for class "DHT"!!
 
-CloudCover::CloudCover(int DHTPIN): dht(DHTPIN, DHT11) {
+CloudCover::CloudCover() {
   
-  Adafruit_MLX90614 mlx = Adafruit_MLX90614();
+  
   float measured_sky_temp = 0;
   float calculated_sky_temp = 0;
   float cloud_value = 0;
   float ambientTemp = 0;
   float objectTemp = 0;
+  float humidity = 0;
+  float temperature = 0;
+  double new_emissivity = 0.95;
   
 }
-//TwoWire &theWire, uint8_t addr
-void CloudCover::begin(int sda, int scl) {
-  SDA = sda;
-  SCL = scl;
-  //Serial.println("Address mlx " + String(addr));
-  dht.begin();
-  //I2C_wire = &theWire;
-  // init sensor addr, I2C_wire
-  if (!mlx.begin()) {
-    Serial.println("Error connecting to MLX sensor. Check wiring.");
-    while (1);
-  }
-  
-}
+
 
 float CloudCover::clear_sky_temp() {
   /**
@@ -47,29 +39,19 @@ float CloudCover::clear_sky_temp() {
    * 
    */
 
-  float humidity = dht.readHumidity();
-  // Read temperature as Celsius (the default)
-  float temperature = dht.readTemperature();
+ 
   float vapor_pressure;
-
-  // Check if any reads failed and exit early (to try again).
-  if (isnan(humidity) || isnan(temperature)) {
-    Serial.println(F("Failed to read from DHT sensor!"));
-    return calculated_sky_temp;  // Last measured temperatur
-  }
-  else {  
-    vapor_pressure = humidity/100*6.11*pow(10,((7.5*temperature)/(273.3+temperature)));
-    calculated_sky_temp = -31.1 + 0.417*temperature*sqrt(vapor_pressure);  
-    Serial.println("Vapor pressure: " + String(vapor_pressure) + "mb");
-    Serial.println("Clear sky temperature: " + String(calculated_sky_temp) + "C ");
-
-  }
-
+ 
+  vapor_pressure = humidity/100*6.11*pow(10,((7.5*temperature)/(273.3+temperature)));
+  calculated_sky_temp = -31.1 + 0.417*temperature*sqrt(vapor_pressure);  
+  Serial.println("Vapor pressure: " + String(vapor_pressure) + "mb");
+  Serial.println("Clear sky temperature: " + String(calculated_sky_temp) + "C ");
+  
   return calculated_sky_temp;
 }
 
 
-float CloudCover::get_cloud_value(float cloud_value_scale=30) {
+float CloudCover::get_cloud_value(float cloud_value_scale=0.6, float object_temp_adjust=0.0, float _humidity=0.0, float _temperature=0.0, float object_temp=999.0, float ambient_temp=999.0 ) {
   /**
    * @brief This function calculate the cloude value
    * @return:
@@ -79,21 +61,15 @@ float CloudCover::get_cloud_value(float cloud_value_scale=30) {
    *  sky temperature and calculated sky temperature
    * 
    */
-  float x = mlx.readAmbientTempC();
-  if (!isnan(x)) { // On success, read() will return 1, on fail 0.
-    Serial.println("Ambient temperature: " + String(x));
-    ambientTemp = x;  // Not used
-  }
-  x= mlx.readObjectTempC();
-  if ( !isnan(x)) {
-    
-    objectTemp = x;
-    Serial.println("Sky temperature: " + String(objectTemp));
-  }
+  humidity = _humidity;
+  temperature = _temperature;
+  objectTemp = object_temp;
+  ambientTemp = ambient_temp;
+
   calculated_sky_temp = clear_sky_temp();
 
   float temp_diff = objectTemp - calculated_sky_temp;
-  float cloud_factor = temp_diff/cloud_value_scale;
+  float cloud_factor = temp_diff/(15 + cloud_value_scale*25); // Scaling between 15 to 40 degrees 
   if (cloud_factor < 0) {
     Serial.println("Cloud value: " + String(1));
     return 1;
@@ -110,36 +86,48 @@ float CloudCover::get_cloud_value(float cloud_value_scale=30) {
 }
 
 float CloudCover::get_sensor_temp() {
-  return dht.readTemperature();
+  return temperature;
 }
 
 float CloudCover::get_humidty() {
-  return dht.readHumidity();
+  return humidity;
 }
 
-void CloudCover::sleep() {
-  Wire.beginTransmission(byte(0x5A));
-  Wire.write(byte(0x00));
-  Wire.write(byte(0xFF));
-  Wire.write(byte(0xE8));
-  Wire.endTransmission();
-
-  pinMode(SCL, OUTPUT);
-	digitalWrite(SCL, LOW);
-	pinMode(SDA, INPUT);
+float CloudCover::get_object_temp() {
+  return objectTemp;
 }
 
-void CloudCover::wake() {
-  Wire.endTransmission(true);
-  pinMode(SCL, INPUT); // SCL high
-	pinMode(SDA, OUTPUT);
-	digitalWrite(SDA, LOW); // SDA low
-	delay(50); // delay at least 33ms
-	pinMode(SDA, INPUT); // SDA high
-	delay(250);
-	// PWM to SMBus mode:
-	pinMode(SCL, OUTPUT);
-	digitalWrite(SCL, LOW); // SCL low
-	delay(10); // Delay at least 1.44ms
-	pinMode(SCL, INPUT); // SCL high
+float CloudCover::get_ambient_temp() {
+  return ambientTemp;
 }
+
+float CloudCover::get_calculated_sky_temp() {
+  return calculated_sky_temp;
+}
+
+// void CloudCover::sleep() {
+//   Wire.beginTransmission(byte(0x5A));
+//   Wire.write(byte(0x00));
+//   Wire.write(byte(0xFF));
+//   Wire.write(byte(0xE8));
+//   Wire.endTransmission();
+
+//   pinMode(SCL, OUTPUT);
+// 	digitalWrite(SCL, LOW);
+// 	pinMode(SDA, INPUT);
+// }
+
+// void CloudCover::wake() {
+//   Wire.endTransmission(true);
+//   pinMode(SCL, INPUT); // SCL high
+// 	pinMode(SDA, OUTPUT);
+// 	digitalWrite(SDA, LOW); // SDA low
+// 	delay(50); // delay at least 33ms
+// 	pinMode(SDA, INPUT); // SDA high
+// 	delay(250);
+// 	// PWM to SMBus mode:
+// 	pinMode(SCL, OUTPUT);
+// 	digitalWrite(SCL, LOW); // SCL low
+// 	delay(10); // Delay at least 1.44ms
+// 	pinMode(SCL, INPUT); // SCL high
+//}

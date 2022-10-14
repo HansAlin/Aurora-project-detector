@@ -20,8 +20,7 @@
 class TSL2591 {
   public:
     TSL2591();
-    //
-    void begin(TwoWire &theWire, uint8_t addr);
+    void begin();
     void displaySensorDetails(void);
     void configureSensor(int gain, int intTime);
     float simpleRead();
