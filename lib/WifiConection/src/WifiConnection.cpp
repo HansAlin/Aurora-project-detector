@@ -1,124 +1,206 @@
-#include "Arduino.h"
-#include "WifiConnection.h"
-#include "LittleFS.h"
-#include <WiFiManager.h>
-#include <ArduinoJson.h>
-#include <DNSServer.h>
-#include <ESP8266WebServer.h>
+#include "WiFiConnection.h"
+
+WiFiConnection::WiFiConnection(const char* ssid, const char* password)
+  : ssid(ssid), password(password), server(80), longitude(0), latitude(0), zenit(0), utc_off(0), cloud_value_scale(0), temperature(0), humidity(0), aurora_point(0) {}
+
+void WiFiConnection::update() {
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.softAP(ssid, password);
+  Serial.println();
+  Serial.print("Access Point Mode IP address: ");
+  Serial.println(WiFi.softAPIP());
+  // if (WiFi.status() !=WL_CONNECTED) {
+  //   int count = 0;
+  //   Serial.println("Trying to access wifi");
+  //   while (WiFi.begin() != WL_CONNECTED && count < 10 ) {
+  //     Serial.print(".");
+  //     count += 1;
+  //     delay(500);
+  //   }
+  // }
+  server.on("/", [this]() {
+    String html = "<html><body>";
+    html += "<h2>Values</h2>";
+    // html += "<p>Longitude: " + String(longitude) + "</p>";
+    // html += "<p>Latitude: " + String(latitude) + "</p>";
+    // html += "<p>Zenit: " + String(zenit) +  "</p>";
+    // html += "<p>UTC off: " + String(utc_off) + "</p>";
+    // html += "<p>Cloud value scale: " + String(cloud_value_scale) +  "</p>";
+    // html += "<p>Channel ID: " + channel_ID +  "</p>";
+    // html += "<p>Write API: " + writeAPI +  "</p>";
+    // html += "<p>Read API: " + readAPI +  "</p>";
+
+    html += "<form method='get' action='/update'>";
+    html += "<label>Change Longitude:</label>";
+    html += "<input type='text' name='longitude' value='" + String(longitude) + "'>";
+    html += "<input type='submit' value='Submit'><br>";
+    html += "</form>";
+
+    html += "<form method='get' action='/update'>";
+    html += "<label>Change Latitude:</label>";
+    html += "<input type='text' name='latitude' value='" + String(latitude) + "'>";
+    html += "<input type='submit' value='Submit'><br>";
+    html += "</form>";
+
+    html += "<form method='get' action='/update'>";
+    html += "<label>Change Zenit:</label>";
+    html += "<input type='text' name='zenit' value='" + String(zenit) + "'>";
+    html += "<input type='submit' value='Submit'><br>";
+    html += "</form>";
+
+    html += "<form method='get' action='/update'>";
+    html += "<label>Change UTC off:</label>";
+    html += "<input type='text' name='utc_off' value='" + String(utc_off) + "'>";
+    html += "<input type='submit' value='Submit'><br>";
+    html += "</form>";
+
+    html += "<form method='get' action='/update'>";
+    html += "<label>Change Cloud Value Scale:</label>";
+    html += "<input type='text' name='cloud_value_scale' value='" + String(cloud_value_scale) + "'>";
+    html += "<input type='submit' value='Submit'><br>";
+    html += "</form>";
+
+    html += "<form method='get' action='/update'>";
+    html += "<label>Change Channel ID:</label>";
+    html += "<input type='text' name='channel_id' value='" + channel_ID + "'>";
+    html += "<input type='submit' value='Submit'><br>";
+    html += "</form>";
+
+    html += "<form method='get' action='/update'>";
+    html += "<label>Change write API:</label>";
+    html += "<input type='text' name='write_API' value='" + writeAPI + "'>";
+    html += "<input type='submit' value='Submit'><br>";
+    html += "</form>";
+
+    html += "<form method='get' action='/update'>";
+    html += "<label>Change read API:</label>";
+    html += "<input type='text' name='read_API' value='" + readAPI + "'>";
+    html += "<input type='submit' value='Submit'><br>";
+    html += "</form>";
+
+    html += "<p>Temperature: " + String(temperature) +  "</p>";
+    html += "<p>Humidity: " + String(humidity) +  "</p>";
+    html += "<p>Aurora points: " + String(aurora_point) +  "</p>";
 
 
 
-WifiConnection::WifiConnection() {}
-// String *myWriteAPIKey, String *myReadAPIKey, unsigned long &channel_id
-void WifiConnection::connect_to_internet() {
+
+    html += "<h1>Wi-Fi Connection</h1>";
+    html += "<form method='get' action='/connect'>";
+    html += "<label>SSID:</label>";
+    html += "<input type='text' name='ssid'><br>";
+    html += "<label>Password:</label>";
+    html += "<input type='password' name='password'><br>";
+    html += "<input type='submit' value='Connect'>";
+    html += "</form>";
+
     
-    // CHANNEL_FILE = "/channel_api.txt";
-    // WRITE_API_FILE = "/write_api.txt";
-    // READ_API_FILE = "/read_api.txt";
-    // LittleFS.begin();
-    String channel_string = read_from_file(CHANNEL_FILE);
-    // channel_id = atol(channel_string.c_str());
-    // String WriteAPI = read_from_file(WRITE_API_FILE);
-    // myWriteAPIKey = &WriteAPI;
-    // String ReadAPI = read_from_file(READ_API_FILE);
-    // myReadAPIKey = &ReadAPI;
+    html += "</body></html>";
 
-    bool forceConfig = false;
 
-    if ( channel_string  == "") {
-      forceConfig = true;
+    server.send(200, "text/html", html);
+  });
+
+  server.on("/update", [this]() {
+    if (server.hasArg("longitude")) {
+      longitude = server.arg("longitude").toFloat();
     }
-    
-    
-
-    WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
-    
-    //WiFiManager, Local intialization. Once its business is done, there is no need to keep it around
-    WiFiManager wm;
-    
-    //wm.setSaveConfigCallback(saveConfigCallback);
-    //wm.setAPCallback(configModeCallback);
-
-    // wm.resetSettings();
-    // WiFiManagerParameter channel_id_text_box("channel_id_text_box", "Channel ID ", "", 50);
-    // wm.addParameter(&channel_id_text_box);
-
-    // WiFiManagerParameter write_api_text_box("write_api_text", "API key write: ", "", 50);
-    // wm.addParameter(&write_api_text_box);
-
-    // WiFiManagerParameter read_api_text_box("read_api_text_box", "API key read: ", "",50);
-    // wm.addParameter(&read_api_text_box);
-
-    if (forceConfig) {
-      if (!wm.startConfigPortal("Aurora Detector"))
-        {
-          Serial.println("failed to connect and hit timeout");
-          delay(3000);
-          //reset and try again, or maybe put it to deep sleep
-          ESP.restart();
-          delay(5000);
-        }
+    if (server.hasArg("latitude")) {
+      latitude = server.arg("latitude").toFloat();
     }
-    else {
-      if (!wm.autoConnect("Aurora Detector"))
-        {
-          Serial.println("failed to connect and hit timeout");
-          delay(3000);
-          // if we still have not connected restart and try all over again
-          ESP.restart();
-          delay(5000);
-        }
+    if (server.hasArg("zenit")) {
+      zenit = server.arg("zenit").toFloat();
     }
- 
-  // If we get here, we are connected to the WiFi
- 
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
-  // strncpy(myWriteAPIKey, write_api_text_box.getValue(), sizeof(myWriteAPIKey));
-  // strncpy(myReadAPIKey, read_api_text_box.getValue(), sizeof(myReadAPIKey));
-  // char *ptr;
-  // channel_id = strtoul(channel_id_text_box.getValue(), &ptr, 16);
-  // write_to_file(CHANNEL_FILE, channel_id_text_box.getValue() );
-  // write_to_file(WRITE_API_FILE, write_api_text_box.getValue() );
-  // write_to_file(READ_API_FILE, read_api_text_box.getValue());
+    if (server.hasArg("utc_off")) {
+      utc_off = server.arg("utc_off").toFloat();
+    }
+    if (server.hasArg("cloud_value_scale")) {
+      cloud_value_scale = server.arg("cloud_value_scale").toFloat();
+    }
+    if (server.hasArg("channel_id")) {
+      channel_ID = server.arg("channel_id");
+    }
+    if (server.hasArg("write_API")) {
+      writeAPI = server.arg("write_API");
+    }
+    if (server.hasArg("read_API")) {
+      readAPI = server.arg("read_API");
+    }
 
-  LittleFS.end();
+
+
+    server.send(200, "text/plain", "Values updated");
+  });
+
+  server.on("/connect", [this]() {
+    String ssidParam = server.arg("ssid");
+    String passwordParam = server.arg("password");
+    ssid = ssidParam.c_str();
+    password = passwordParam.c_str();
+    Serial.println(ssid);
+    Serial.println(password);
+    WiFi.begin(ssid, password);
+    Serial.print("Local IPaddress: ");
+    Serial.println(WiFi.localIP());
+    server.send(200, "text/plain", "Wi-Fi connected!");
+    delay(1000);
+    //ESP.reset();
+  });
+
+  
+
+  server.begin();
+  Serial.println("Web server started");
 }
 
-String WifiConnection::read_from_file(String file_name) {
-    String result = "";
-  
-  File this_file = LittleFS.open(file_name, "r");
-  if (!this_file) { // failed to open the file, retrn empty result
-    Serial.println("failed to open the file, return false");
-    return result;
-  }
-  while (this_file.available()) {
-      result += (char)this_file.read();
-  }
-  
-  this_file.close();
-  return result;
+// void WiFiConnection::connect() {
+
+// }
+
+void WiFiConnection::handleClient() {
+  server.handleClient();
 }
 
-bool WifiConnection::write_to_file(String file_name, String contents) {
-    File this_file = LittleFS.open(file_name, "w");
-  if (!this_file) { // 
-    Serial.println("failed to open the file, return false");
-    return false;
-  }
-  int bytesWritten = this_file.print(contents);
- 
-  if (bytesWritten == 0) { // write failed
-      Serial.println("failed to open the file, return false");
-      return false;
-  }
+void WiFiConnection::getParam(float * data) {
+  data[0] = longitude;
+  data[1] = latitude;
+  data[2] = zenit;
+  data[3] = utc_off;
+  data[4] = cloud_value_scale;
+  
    
-  this_file.close();
-  Serial.println("Saved OK return true");
-  return true;
+}
+
+void WiFiConnection::setParam(float * data) {
+  longitude = data[0];
+  latitude = data[1];
+  zenit = data[2];
+  utc_off = data[3];
+  cloud_value_scale = data[4];
+  
+   
+}
+
+void WiFiConnection::setData(float * data) {
+  full_557 = data[0];
+  full = data[1];
+  cloud = data[2];
+  aurora_point = data[3];
+  temperature = data[4];
+  humidity = data[5];
+  objectTemp = data[6];
 }
 
 
+
+void WiFiConnection::setAPI(String * dataList) {
+  channel_ID = dataList[0];
+  writeAPI = dataList[1];
+  readAPI = dataList[2];
+}
+
+void WiFiConnection::getAPI(String * dataList) {
+  dataList[0] = channel_ID;
+  dataList[1] = writeAPI;
+  dataList[2] = readAPI; 
+}

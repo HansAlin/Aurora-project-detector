@@ -11,7 +11,7 @@ AuroraPoints::AuroraPoints() {
   float _557 = -1;
 }
 
-float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, float cloud_cover, int night, float weight_557=1.0) {
+float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, float cloud_cover, bool night, float weight_557=1.0) {
   /**
    * @brief This function calculates the aurora points
    * @param IR  IR value from sensor without filter 
@@ -24,7 +24,7 @@ float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, floa
    * 
    * @return return the aurora points
    */
-  if (FULL == 0 || IR == 0 || night == 0 ) {
+  if (FULL == 0 || IR == 0 || night == false ) {
     return 0;
   }
   ir = IR;
@@ -35,7 +35,7 @@ float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, floa
   }
 
   float points_557 = _557*weight_557;
-  Serial.println("Calculating aurora points");
+  // Serial.println("Calculating aurora points");
   float denominator = full - 2*ir;
   float points_fraction_557_FULL;
   if (denominator <= 0) {
@@ -47,10 +47,10 @@ float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, floa
   
   float points_clear_sky = cloud_cover;
   float points_total = (points_557 + points_fraction_557_FULL) * points_clear_sky;
-  Serial.println("Weighted 557nm value: " + String(points_557));
-  Serial.println("Fraction points: " + String(points_fraction_557_FULL));
-  Serial.println("Cloud cover: " + String(cloud_cover));
-  Serial.println("Total points " + String(points_total));
+  // Serial.println("Weighted 557nm value: " + String(points_557));
+  // Serial.println("Fraction points: " + String(points_fraction_557_FULL));
+  // Serial.println("Cloud cover: " + String(cloud_cover));
+  // Serial.println("Total points " + String(points_total));
   return points_total; 
 }
 

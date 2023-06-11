@@ -1,30 +1,41 @@
-#include "Arduino.h"
-#include "LittleFS.h"
-#include <WiFiManager.h>
-#include <ArduinoJson.h>
+#ifndef WIFICONNECTION_H
+#define WIFICONNECTION_H
 
-#ifndef WifiConnection_h
-#define WifiConnection_h
+#include <ESP8266WiFi.h>
+#include <WiFiClient.h>
+#include <ESP8266WebServer.h>
 
-class WifiConnection {
-  public:
-    WifiConnection();
-    //String *myWriteAPIKey, String *myReadAPIKey, unsigned long &channel_id
-    void connect_to_internet();
-    
+class WiFiConnection {
+private:
+  const char* ssid;
+  const char* password;
+  ESP8266WebServer server;
+  float longitude;
+  float latitude;
+  float zenit;
+  float utc_off;
+  float cloud_value_scale;
+  float temperature;
+  float humidity;
+  float aurora_point;
+  float full_557;
+  float full;
+  float cloud;
+  float objectTemp;
+  String channel_ID;
+  String writeAPI;
+  String readAPI;
+  
 
-  private:
-    #define ESP_DRD_USE_SPIFFS true  
-    String CHANNEL_FILE;
-    String WRITE_API_FILE;
-    String READ_API_FILE;
-    bool shouldSaveConfig;
-    unsigned long channel_id;
-    String  myWriteAPIKey; //
-    String  myReadAPIKey;   //
-    bool write_to_file(String file_name, String contents);
-    String read_from_file(String path);
-    
-
+public:
+  WiFiConnection(const char* ssid, const char* password);
+  void update();
+  void handleClient();
+  void setData(float * data);
+  void getParam(float * data);
+  void setParam(float * data);
+  void setAPI(String * datalist);
+  void getAPI(String * datalist);
 };
+
 #endif

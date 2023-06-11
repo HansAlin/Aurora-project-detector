@@ -44,15 +44,15 @@ float CloudCover::clear_sky_temp() {
  
   vapor_pressure = humidity/100*6.11*pow(10,((7.5*temperature)/(273.3+temperature)));
   calculated_sky_temp = -31.1 + 0.417*temperature*sqrt(vapor_pressure);  
-  Serial.println("Vapor pressure: " + String(vapor_pressure) + "mb");
-  Serial.println("Clear sky temperature: " + String(calculated_sky_temp) + "C ");
+  // Serial.println("Vapor pressure: " + String(vapor_pressure) + "mb");
+  // Serial.println("Clear sky temperature: " + String(calculated_sky_temp) + "C ");
   
   return calculated_sky_temp;
 }
 
 
-float CloudCover::get_cloud_value(float cloud_value_scale=0.6, float object_temp_adjust=0.0, float _humidity=0.0, float _temperature=0.0, float object_temp=999.0, float ambient_temp=999.0 ) {
-  /**
+float CloudCover::get_cloud_value(float cloud_value_scale=0.6, float _humidity=0.0, float _temperature=0.0, float object_temp=999.0, float ambient_temp=999.0 ) {
+  /** 
    * @brief This function calculate the cloude value
    * @return:
    *  cloud_value: float between 0 - 1.0
@@ -61,6 +61,7 @@ float CloudCover::get_cloud_value(float cloud_value_scale=0.6, float object_temp
    *  sky temperature and calculated sky temperature
    * 
    */
+  //TODO , float object_temp_adjust=0.0,
   humidity = _humidity;
   temperature = _temperature;
   objectTemp = object_temp;
@@ -71,15 +72,15 @@ float CloudCover::get_cloud_value(float cloud_value_scale=0.6, float object_temp
   float temp_diff = objectTemp - calculated_sky_temp;
   float cloud_factor = temp_diff/(15 + cloud_value_scale*25); // Scaling between 15 to 40 degrees 
   if (cloud_factor < 0) {
-    Serial.println("Cloud value: " + String(1));
+    // Serial.println("Cloud value: " + String(1));
     return 1;
   }
   else if (cloud_factor > 1) {
-    Serial.println("Cloud value: " + String(0));
+    // Serial.println("Cloud value: " + String(0));
     return 0;
   }
   else {
-    Serial.println("Cloud value: " + String(1 - cloud_factor));
+    // Serial.println("Cloud value: " + String(1 - cloud_factor));
     return 1 - cloud_factor;
   }
 
@@ -103,6 +104,17 @@ float CloudCover::get_ambient_temp() {
 
 float CloudCover::get_calculated_sky_temp() {
   return calculated_sky_temp;
+}
+
+float CloudCover::get_emissivity() {
+  // TODO this one is not complete
+  float T = 35;
+  float h = 0.5;
+  float es = 6.112*exp(17.67*T/(T+243.5));
+  float e = es*h;
+  float Td = 243.5*log(e/6.112)/(17.67-log(e/6.112));
+  float emissivity = 0.736 + 0.00577*Td;
+  return 0;
 }
 
 // void CloudCover::sleep() {

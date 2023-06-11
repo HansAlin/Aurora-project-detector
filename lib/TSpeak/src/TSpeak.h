@@ -1,5 +1,3 @@
-
-
 #include "Arduino.h"
 #ifndef TSpeak_H
 #define TSpeak_H
@@ -13,7 +11,8 @@ class TSpeak{
   
   public:
     TSpeak();
-    void initiate(const char *ssid, const char *pass, const char *WriteAPI, const char *ReadAPI, unsigned long Channel_ID, WiFiClient  &client );
+    void initiate(const char *WriteAPI, const char *ReadAPI, unsigned long Channel_ID, WiFiClient  &client );
+    void updateAPI(const char *WriteAPI, const char *ReadAPI, unsigned long Channel_ID);
     void connect_to_internet();
     void upload(float data[], int * fieldNumber, int dataPoints);
     void download(int read_data_length, int * fieldNumber, float * data);
@@ -21,8 +20,8 @@ class TSpeak{
     void sleep(int sleepmin);
   
   private:
-    const char *_ssid;
-    const char *_pass; 
+    // const char *_ssid;
+    // const char *_pass; 
     int _dataPoints;
     unsigned long _Channel_ID;
     const char *_myWriteAPIKey; 

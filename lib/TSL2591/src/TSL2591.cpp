@@ -194,11 +194,11 @@ void TSL2591::advancedRead(float * pvalues)
   ir = lum >> 16;
   full = lum & 0xFFFF;
   float lux = tsl.calculateLux(full, ir);
-  Serial.print(F("[ ")); Serial.print(millis()); Serial.print(F(" ms ] "));
-  Serial.print(F("IR: ")); Serial.print(ir);  Serial.print(F("  "));
-  Serial.print(F("Full: ")); Serial.print(full); Serial.print(F("  "));
-  Serial.print(F("Visible: ")); Serial.print(full - ir); Serial.print(F("  "));
-  Serial.print(F("Lux: ")); Serial.println(lux, 6);
+  // Serial.print(F("[ ")); Serial.print(millis()); Serial.print(F(" ms ] "));
+  // Serial.print(F("IR: ")); Serial.print(ir);  Serial.print(F("  "));
+  // Serial.print(F("Full: ")); Serial.print(full); Serial.print(F("  "));
+  // Serial.print(F("Visible: ")); Serial.print(full - ir); Serial.print(F("  "));
+  // Serial.print(F("Lux: ")); Serial.println(lux, 6);
   pvalues[0] = lux;
   pvalues[1] = (float) ir;
   pvalues[2] = (float) full;

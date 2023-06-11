@@ -5,7 +5,7 @@
 class AuroraPoints {
   public:
     AuroraPoints();
-    float get_aurora_points(float IR, float FULL,  float IR_557, float cloud_cover, int night,  float _557_weight);
+    float get_aurora_points(float IR, float FULL,  float IR_557, float cloud_cover, bool night,  float _557_weight);
     float Recive_data();
     
   private:

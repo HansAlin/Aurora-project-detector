@@ -9,7 +9,8 @@ class CloudCover {
   public:
     
     CloudCover();
-    float get_cloud_value(float cloud_value_scale, float object_temp_adjust,float _humidity, float _temperature, float object_temp, float ambient_temp);
+    float get_cloud_value(float cloud_value_scale, float _humidity, float _temperature, float object_temp, float ambient_temp);
+    // TODO float object_temp_adjust,
     float get_sensor_temp();
     float get_humidty();
     void sleep();
@@ -20,6 +21,7 @@ class CloudCover {
 
   private:
       float clear_sky_temp();
+      float get_emissivity();
       float measured_sky_temp;
       float calculated_sky_temp;
       float cloud_value;
