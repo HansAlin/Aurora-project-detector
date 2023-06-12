@@ -1,13 +1,10 @@
-#include <Arduino.h>     // Needed when working Platform io
-// ----------(c) Electronics-project-hub-------- //
-//        Program for ESP8266 D1 MINI
-//        
-// Libraries
+#include <Arduino.h>     
 #include <ESP8266WiFi.h>
 #include <Adafruit_I2CDevice.h>
 #include <Adafruit_MLX90614.h>
 #include "SPI.h"
 #include <Adafruit_Sensor.h>
+#include "DHT.h"
 
 // Libraries for this project
 #include "AuroraPoints.h"
@@ -16,7 +13,8 @@
 #include "CloudCover.h"
 #include "WifiConnection.h"
 #include "NightVeto.h"
-#include "DHT.h"
+#include "FileHandle.h"
+
 
 #define MLX90614_I2CADDR 0x5A
 #define DHTPIN D7              // D4 on wemos d1 mini
