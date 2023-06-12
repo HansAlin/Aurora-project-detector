@@ -150,7 +150,7 @@ void setup() {
   fileHandle.getAPI(APIList);           // Get saved data
   upDateParamFromParamList(paramList);   // Update values
   upDateAPIFromList(APIList);           // Update API values
-  
+  WiFi.begin();
   dht.begin();
   delay(50);
   Wire.begin(sda, scl);
