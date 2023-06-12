@@ -17,7 +17,6 @@
 #include "WifiConnection.h"
 #include "NightVeto.h"
 #include "DHT.h"
-#include "FileHandle.h"
 
 #define MLX90614_I2CADDR 0x5A
 #define DHTPIN D7              // D4 on wemos d1 mini
