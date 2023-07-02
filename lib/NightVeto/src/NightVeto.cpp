@@ -14,9 +14,8 @@ void NightVeto::init(float longitude, float latitude, float UTCOff) {
 
 }
 
-bool NightVeto::ifNight() {
-  int day_of_year = dayOfYear();
-  float now = Now();
+bool NightVeto::ifNight(int day_of_year, float now) {
+
   g = gamma(day_of_year);
   e = eqTime(g);
   d = toDeg(decl(g));

@@ -81,6 +81,8 @@ void WiFiConnection::update() {
     html += "<p>Temperature: " + String(temperature) +  "</p>";
     html += "<p>Humidity: " + String(humidity) +  "</p>";
     html += "<p>Aurora points: " + String(aurora_point) +  "</p>";
+    html += "<p>Time: " + formatedTime + "</p>";
+    html += "<p>Day or Night: " + dayOrNight + "</p>";
 
 
 
@@ -197,6 +199,8 @@ void WiFiConnection::setAPI(String * dataList) {
   channel_ID = dataList[0];
   writeAPI = dataList[1];
   readAPI = dataList[2];
+  formatedTime = dataList[3];
+  dayOrNight = dataList[4];
 }
 
 void WiFiConnection::getAPI(String * dataList) {

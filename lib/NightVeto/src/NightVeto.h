@@ -9,7 +9,7 @@ class NightVeto {
   public:
     NightVeto();
     void init(float longitude, float latitude, float UTCOff);
-    bool ifNight();
+    bool ifNight(int day_of_year, float now);
     
 
   private:

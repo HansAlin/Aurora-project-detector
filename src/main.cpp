@@ -14,6 +14,7 @@
 #include "WifiConnection.h"
 #include "NightVeto.h"
 #include "FileHandle.h"
+#include "TimeKeeping.h"
 
 
 #define MLX90614_I2CADDR 0x5A
@@ -38,8 +39,8 @@ unsigned long channel_ID_1;
 char myWriteAPIKey_1[20]; 
 char myReadAPIKey_1[20];
 //-------------------------------------------//
-const int numOfElementsAPI = 3;
-String APIList[numOfElementsAPI] = {String(channel_ID_1), String(myWriteAPIKey_1), String(myReadAPIKey_1)};
+const int numOfElementsAPI = 5;
+String APIList[numOfElementsAPI] = {String(channel_ID_1), String(myWriteAPIKey_1), String(myReadAPIKey_1), "", ""};
 
 
 unsigned long input_value;
@@ -59,7 +60,7 @@ int time_to_dusk;             // Time from ThingSpeak in minutes to dusk
 unsigned int raw;             // Reading value from A0 analog pin
 // float max_voltage = 4.1;      // Max voltage on battery not implemented
 const int number_of_sensors = 2;
-bool night = 0;                // Returning night veto value from thingSpeak 0=day 1=night
+bool night = 0;                // Returning night veto 
 
 float weight_557 = 1;         // Weighting factor between raw 557nm data and aurora points
                               // Values 0 to 1. 1 corresponds to that only raw data from 557nm filter sensor is taking 
@@ -134,6 +135,7 @@ AuroraPoints auror;
 NightVeto nightVeto;
 WiFiConnection wifiConnection(ssid_detector, password_detector);
 FileHandle fileHandle;
+TimeKeeping t;
 
 
 
@@ -183,6 +185,8 @@ void setup() {
   Serial.println(channel_ID_1);
   thingSpeak.initiate(myWriteAPIKey_1, myReadAPIKey_1, channel_ID_1, client);
   
+  Serial.println("Set up time: ");
+  t.begin(utc_off);
   delay(50);
   pinMode(A0, INPUT);
   delay(50);
@@ -195,7 +199,7 @@ void loop() {
   Serial.println();
   Serial.println('----------- Loop -------------');
   delay(50);
-  
+  t.upDate(utc_off);
   fileHandle.getParam(paramList);
   fileHandle.getAPI(APIList);
 
@@ -285,7 +289,13 @@ void upDateAPIList(String * API_data) {
   API_data[0] = String(channel_ID_1);
   API_data[1] = String(myWriteAPIKey_1);
   API_data[2] = String(myReadAPIKey_1);
-
+  API_data[3] = t.getFormatedTime();
+  if (night) {
+    API_data[4] = "Night";
+  }
+  else {
+    API_data[4] = "Day";
+  }
 
 }
 
@@ -335,7 +345,7 @@ void collecting_data_from_sensors(){
   Serial.println();
   Serial.println("Collecting data: ");
 
-  night = nightVeto.ifNight();
+  night = nightVeto.ifNight(t.getDayOfYear(), t.getMinutes());
     
   float values[3];  // Array to collecting data from TSL2591 sensors
  
@@ -449,6 +459,12 @@ void collecting_data_from_sensors(){
     aurora_point = new_aurora_point; 
   }
   Serial.println("Aurora points                  : " + String(aurora_point));
+  if (night) {
+    Serial.println("Night!");
+  }
+  else {
+    Serial.println("Day!");
+  }
   Serial.println("Cloud value                    : " + String(cloud));
   Serial.println("Temerature at detector (DHT)   : " + String(temperature));
   Serial.println("Humidity value                 : " + String(humidity));

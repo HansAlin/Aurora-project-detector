@@ -25,6 +25,8 @@ private:
   String channel_ID;
   String writeAPI;
   String readAPI;
+  String formatedTime;
+  String dayOrNight;
   
 
 public:
