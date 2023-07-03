@@ -11,9 +11,9 @@ TimeKeeping::TimeKeeping() {
 
 void TimeKeeping::begin(int UTC_off) {
   Serial.println("TimeKeeping begins!");
-  setUTCoffSet(UTC_off);
   timeClient.begin();
-  timeClient.setTimeOffset(UTCoffSet);
+  timeClient.setTimeOffset(UTC_off*3600);
+  Serial.println("Set UTC off-cet: " + String(UTC_off));
 
 }
 
@@ -21,9 +21,6 @@ void TimeKeeping::begin(int UTC_off) {
 int TimeKeeping::getDayOfYear() {
   
   int days = epochTime % 31556926; // Days since New Year in seconds
-  // TODO remove print
-  Serial.println("Year: " + String(days));
-
   days = days / 86400;
   return days;
 }
@@ -52,10 +49,11 @@ void TimeKeeping::setUTCoffSet(int hour_offset) {
 void TimeKeeping::upDate(int utc_off) {
   
   timeClient.update();
-  formatedTime = timeClient.getFormattedTime();
-  epochTime = timeClient.getEpochTime();
   setUTCoffSet(utc_off);
   timeClient.setTimeOffset(UTCoffSet);
+  formatedTime = timeClient.getFormattedTime();
+  epochTime = timeClient.getEpochTime();
+  
 }
 
 String TimeKeeping::getFormatedTime() {

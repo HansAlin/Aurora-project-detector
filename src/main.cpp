@@ -216,7 +216,7 @@ void loop() {
   fileHandle.saveAPI(APIList);
   upDateParamFromParamList(paramList);
   upDateAPIFromList(APIList);
-
+  upDateAPIList(APIList);
   nightVeto.init(longitude, latitude, utc_off);
 
   collecting_data_from_sensors();     // Collect data from sensors
@@ -226,17 +226,10 @@ void loop() {
     Serial.print(String(paramList[i]) + " ");
   }
   Serial.println();
-  
 
   thingSpeak.connect_to_internet();   // Connect to internet and ThingSpeak
   thingSpeak.upload(write_data, write_fields, write_data_length );            // Upload to ThingSpeak
-  
-  
-  
 
-  
-
-  
   fileHandle.saveParam(paramList);
   
   Serial.println("---------------");
@@ -280,7 +273,7 @@ void upDateAPIFromList(String * API_data) {
   
   str_len = API_data[2].length() + 1;
   myReadAPIKey_1[str_len];
-  API_data[1].toCharArray(myReadAPIKey_1, str_len);
+  API_data[2].toCharArray(myReadAPIKey_1, str_len);
  
 
 }
@@ -459,12 +452,6 @@ void collecting_data_from_sensors(){
     aurora_point = new_aurora_point; 
   }
   Serial.println("Aurora points                  : " + String(aurora_point));
-  if (night) {
-    Serial.println("Night!");
-  }
-  else {
-    Serial.println("Day!");
-  }
   Serial.println("Cloud value                    : " + String(cloud));
   Serial.println("Temerature at detector (DHT)   : " + String(temperature));
   Serial.println("Humidity value                 : " + String(humidity));
@@ -476,6 +463,15 @@ void collecting_data_from_sensors(){
   Serial.println("Full 557                       : " + String(full_557));
   Serial.println("IR 557                         : " + String(IR_557));
   Serial.println("Lux 557                        : " + String(lux_557));
+  Serial.println("Time                           : " + t.getFormatedTime());
+  if (night) {
+    Serial.println("Day or night                   : Night");  
+  }
+  else {
+    Serial.println("Day or night                   : day");
+  }
+  Serial.println("Minutes from midnight          : " + String(t.getMinutes()));
+  Serial.println("Day of year                    : " + String(t.getDayOfYear()));
   
   // Data to ThingSpeak
   write_data[0] = full_557;    
