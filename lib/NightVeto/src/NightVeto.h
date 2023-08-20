@@ -3,13 +3,15 @@
 #define NightVeto_H
 
 #define DAYS_IN_YEAR 365
-#define ZENIT_ANGLE 102
+
 
 class NightVeto {
   public:
     NightVeto();
-    void init(float longitude, float latitude, float UTCOff);
+    void init(float longitude, float latitude, float UTCOff, float zenit);
     bool ifNight(int day_of_year, float now);
+    float dawn;
+    float dusk;
     
 
   private:
@@ -34,8 +36,8 @@ class NightVeto {
     float _lat;
     float _long;
     float _UTCoff;
-    float dawn;
-    float dusk;
+    float _zenit;
+
 
 
 

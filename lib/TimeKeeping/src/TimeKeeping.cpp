@@ -22,6 +22,7 @@ int TimeKeeping::getDayOfYear() {
   
   int days = epochTime % 31556926; // Days since New Year in seconds
   days = days / 86400;
+  // Serial.println("Day  of year: " + String(days));
   return days;
 }
 
@@ -29,8 +30,9 @@ int TimeKeeping::getMinutes() {
 
   int minutes = timeClient.getMinutes();
   int hours = timeClient.getHours();
-
-  return minutes + 60*hours;
+  minutes = minutes + 60*hours;
+  // Serial.println("Present time in minutes: " + String(minutes));
+  return minutes;
 }
 
 int TimeKeeping::getYear() {

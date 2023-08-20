@@ -98,7 +98,7 @@ int global_count = 0;
 // Initial values, location is Mora Sweden
 float longitude = 14.600036;    // Position
 float latitude = 61.01030;      // Position
-float zenit = 109.0;            // Sun zenit angle
+float zenit = 102.0;            // Sun zenit angle
 float utc_off = 2.0;            // UTC off cet
 float cloud_value_scale = 0.6;  // Scaling the output from get_cloud_value, values 0 to 1 where. 0.6 is good 
                                 // starting point, if cloud values are to hight raise value and vice versa
@@ -217,7 +217,7 @@ void loop() {
   upDateParamFromParamList(paramList);
   upDateAPIFromList(APIList);
   upDateAPIList(APIList);
-  nightVeto.init(longitude, latitude, utc_off);
+  nightVeto.init(longitude, latitude, utc_off, zenit);
 
   collecting_data_from_sensors();     // Collect data from sensors
   
@@ -472,6 +472,8 @@ void collecting_data_from_sensors(){
   }
   Serial.println("Minutes from midnight          : " + String(t.getMinutes()));
   Serial.println("Day of year                    : " + String(t.getDayOfYear()));
+  Serial.println("Dusk                           : " + String(nightVeto.dusk));
+  Serial.println("Dawn                           : " + String(nightVeto.dawn));
   
   // Data to ThingSpeak
   write_data[0] = full_557;    

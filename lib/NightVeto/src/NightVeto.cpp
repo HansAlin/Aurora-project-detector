@@ -7,10 +7,11 @@ NightVeto::NightVeto() {
 
 
 }
-void NightVeto::init(float longitude, float latitude, float UTCOff) {
+void NightVeto::init(float longitude, float latitude, float UTCOff, float zenit) {
   _long = longitude;
   _lat = latitude;
   _UTCoff = UTCOff;
+  _zenit = zenit;
 
 }
 
@@ -19,27 +20,40 @@ bool NightVeto::ifNight(int day_of_year, float now) {
   g = gamma(day_of_year);
   e = eqTime(g);
   d = toDeg(decl(g));
-  ha = toDeg(hour_angle(_lat, d, ZENIT_ANGLE));
+  ha = toDeg(hour_angle(_lat, d, _zenit));
   
   dawn = calcDawn(ha, e, _long);
   dusk = calcDusk(ha, e, _long);
 
+  //TODO remove
+  // Serial.println("Ha: " + String(ha));
+  // Serial.println("Gamma in rad: " + String(g));
+  // Serial.println("EqTime in deg: " + String(e));
+  // Serial.println("Declination in deg: " + String(d));
+  // Serial.println("Dawn: " + String(dawn));
+  // Serial.println("Dusk: " + String(dusk));
   bool veto;
-  if ( dawn < now & dusk > now)
+  if ( (dawn < now) & (dusk > now)) {
     veto = false;
-  else
+  }
+  else if (ha == 180) {
+    veto = false;
+  }
+  else {
     veto = true;
+  }
+    
 
   return veto ; 
 }
 
 float NightVeto::calcDawn(float ha, float e, float longitude) {
-  float dawn = 720 - 4*(longitude + ha) - e;
+  float dawn = 720 - 4*(longitude + ha) - e + _UTCoff*60;
   return dawn;
 }
 
 float NightVeto::calcDusk(float ha, float e, float longitude) {
-  float dusk = 720 - 4*(longitude - ha) - e;
+  float dusk = 720 - 4*(longitude - ha) - e + _UTCoff*60;
   return dusk;
 }
 
@@ -64,6 +78,7 @@ float NightVeto::hour_angle(float lat, float decl, float zenit) {
   decl = toRad(decl);
   lat = toRad(lat);
   float value = cos(zenit)/(cos(lat)*cos(decl)) - tan(lat)*tan(decl);
+
   if (value >= 1)
     ha = 0;
   else if (value <= -1)
