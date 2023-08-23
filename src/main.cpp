@@ -23,7 +23,8 @@
 #define TSL2591_I2CADDR 0x29  // I2c address to light sensor
 #define MAX_SLEPING_TIME 200 // Sleeping time in minutes 
 #define SENSOR_READ_RETRIES 5  // How many atempt to read mlx sensor
-#define SENSOR_READ_CYCLES 5  // How often certain sensors should be readed
+#define DHT22_SENSOR_READ_CYCLES 10  // How often DHT sensors should be readed
+#define MLX_SENSOR_READ_CYCLES 5  // How often MLX sensors should be readed
 
 
 // TODO comment
@@ -77,7 +78,8 @@ float temperature = 0;
 float humidity = 0;  
 float ambientTemp = 999;
 float objectTemp = 999;
-int count = 1;                // Take care of how many times data is looked up                             
+int dht_count = 1;                // Take care of how many times data is looked up  
+int mlx_count = 1;                // Take care of how many times data is looked up                            
 
 float lux = 0;                    // is Lux from sensor
 float IR = 0;                     // is the IR value from sensor 
@@ -369,10 +371,8 @@ void collecting_data_from_sensors(){
   
   
   // Only check humidty and every 5:th 
-  // TODO remove print
-  // Serial.println("Count " + String(count)) ;
   // Read temp and humidity from DHT22
-  if (count == SENSOR_READ_CYCLES) {
+  if (dht_count == DHT22_SENSOR_READ_CYCLES) {
     float return_value;
     return_value = dht.readHumidity();
     if (!isnan(return_value)) {
@@ -391,10 +391,10 @@ void collecting_data_from_sensors(){
     else {
       Serial.println("Did not manage to read temperature!");
     }
-    
+    dht_count = 0;
   }
   // Read object temp and ambient temp from MLX
-  if (count == SENSOR_READ_CYCLES) {
+  if (mlx_count == MLX_SENSOR_READ_CYCLES) {
     TCA9548A(4);
     float x = mlx.readAmbientTempC();
     int counter = 1;
@@ -433,7 +433,7 @@ void collecting_data_from_sensors(){
       // One might keep the emission parameter
       //  Serial.println("Adjusted sky temperature: " + String(objectTemp));
     }
-    count = 0;
+    mlx_count = 0;
   }
   float cloud = cc.get_cloud_value(cloud_value_scale, humidity, temperature, objectTemp, ambientTemp);
   if (objectTemp < -250) {
@@ -490,7 +490,8 @@ void collecting_data_from_sensors(){
   }
   
 
-  count++;
+  dht_count++;
+  mlx_count++;
 }
 
 void sleep(int sleepsec) {
