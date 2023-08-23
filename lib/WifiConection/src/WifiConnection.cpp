@@ -50,7 +50,9 @@ void WiFiConnection::update() {
   
   server.on("/", [this]() {
     
-    String html = "<html><head><style>";
+    String html = "<html><head>";
+    html += "<title>Aurora Detector</title>";
+    html += "<style>";
     html += cssContent;
 
     html += "</style>";
