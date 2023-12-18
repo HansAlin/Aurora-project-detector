@@ -28,6 +28,7 @@ float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, floa
 
   if (if_first) {
     full = FULL;
+    _557 = FULL_557;
     if_first = false;
   }
   // Get rid of artificial values
@@ -40,8 +41,8 @@ float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, floa
   }
   
   // Get rid of spike values
-  if (FULL_557 <= 30) {
-    _557 = FULL_557;
+  if (abs(FULL_557 - _557) > 30) {
+    return 0;
   }
 
   ir = IR;
@@ -61,6 +62,7 @@ float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, floa
   float points_clear_sky = cloud_cover;
   if (points_clear_sky < 0.5) {
     points_clear_sky = 0;} 
+    
   float points_total = (points_557 + points_fraction_557_FULL) * points_clear_sky;
   // Serial.println("Weighted 557nm value: " + String(points_557));
   // Serial.println("Fraction points: " + String(points_fraction_557_FULL));
