@@ -9,6 +9,7 @@ AuroraPoints::AuroraPoints() {
   float ir = -1;
   float full = -1;
   float _557 = -1;
+  bool if_first = true;
 }
 
 float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, float cloud_cover, bool night, float weight_557=1.0) {
@@ -24,15 +25,27 @@ float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, floa
    * 
    * @return return the aurora points
    */
+
+  if (if_first) {
+    full = FULL;
+    if_first = false;
+  }
+  // Get rid of artificial values
+  if (abs(FULL - full) > 1000 ) {
+    return 0;
+  }
+  
   if (FULL == 0 || IR == 0 || night == false ) {
     return 0;
   }
-  ir = IR;
-  full = FULL;
+  
   // Get rid of spike values
   if (FULL_557 <= 30) {
     _557 = FULL_557;
   }
+
+  ir = IR;
+  full = FULL;
 
   float points_557 = _557*weight_557;
   // Serial.println("Calculating aurora points");
@@ -46,6 +59,8 @@ float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, floa
   }
   
   float points_clear_sky = cloud_cover;
+  if (points_clear_sky < 0.5) {
+    points_clear_sky = 0;} 
   float points_total = (points_557 + points_fraction_557_FULL) * points_clear_sky;
   // Serial.println("Weighted 557nm value: " + String(points_557));
   // Serial.println("Fraction points: " + String(points_fraction_557_FULL));

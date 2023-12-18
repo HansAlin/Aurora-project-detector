@@ -17,6 +17,7 @@ class AuroraPoints {
     float full;
     float _557;
     float _557IR;
+    bool if_first;
     
 };
 #endif
