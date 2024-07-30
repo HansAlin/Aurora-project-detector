@@ -31,7 +31,8 @@ float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, floa
     _557 = FULL_557;
     if_first = false;
   }
-  // Get rid of artificial values
+  // Get rid of artificial values, value differences between brevious value and current value
+  // should not be more than 1000
   if (abs(FULL - full) > 1000 ) {
     return 0;
   }
@@ -40,17 +41,18 @@ float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, floa
     return 0;
   }
   
-  // Get rid of spike values
-  if (abs(FULL_557 - _557) > 30) {
+  // Get rid of spike values, value differences between brevious value and current value
+  // should not be more than 35
+  if (abs(FULL_557 - _557) > 35) {
     return 0;
   }
 
   ir = IR;
   full = FULL;
 
+  // Weigthning between pure absolute value of 557nm and the relative strength to visible light
   float points_557 = _557*weight_557;
-  // Serial.println("Calculating aurora points");
-  float denominator = full - 2*ir;
+  float denominator = full - 2*ir;      // Some kind of visible light approximation
   float points_fraction_557_FULL;
   if (denominator <= 0) {
     points_fraction_557_FULL = 0;
