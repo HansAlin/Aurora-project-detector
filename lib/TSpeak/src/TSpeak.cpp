@@ -51,7 +51,8 @@ void TSpeak::upload(float data[],int * fieldNumber, int dataPoints) {
   for(int i = 0; i < dataPoints; i++){
   ThingSpeak.setField((fieldNumber[i]), data[i]);
   }
-  
+  Serial.println("Channel: " + String(_Channel_ID));
+  Serial.println("API key: " + String(_myWriteAPIKey) );
   int x = ThingSpeak.writeFields(_Channel_ID, _myWriteAPIKey);   
   
   if(x  == 200){
@@ -60,7 +61,7 @@ void TSpeak::upload(float data[],int * fieldNumber, int dataPoints) {
   else{
     Serial.println("Problem updating channel. HTTP error code " + String(x));
   }
-  delay(50);   // Shortest time between updates depends on subscription at ThingSpeak
+  delay(100);   // Shortest time between updates depends on subscription at ThingSpeak
 }
 
 

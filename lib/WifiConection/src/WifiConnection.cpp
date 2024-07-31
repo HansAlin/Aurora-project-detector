@@ -1,7 +1,7 @@
 #include "WiFiConnection.h"
 
 WiFiConnection::WiFiConnection(const char* ssid, const char* password)
-  : ssid(ssid), password(password), server(80), longitude(0), latitude(0), zenit(0), utc_off(0), cloud_value_scale(0), temperature(0), humidity(0), aurora_point(0) {}
+  : ssid(ssid), password(password), server(80), longitude(0), latitude(0), zenit(0), utc_off(0), cloud_value_scale(0), weight_557(0), temperature(0), humidity(0), aurora_point(0) {}
 
 const char* cssContent = R"(
 
@@ -107,6 +107,12 @@ void WiFiConnection::update() {
     html += "</form>";
 
     html += "<form method='get' action='/update' class='styled-form' onsubmit='redirectToHome()'>";
+    html += "<label>Change Weight 557:</label>";
+    html += "<input type='text' name='weight_557' value='" + String(weight_557) + "'>";
+    html += "<input type='submit' value='Submit'><br>";
+    html += "</form>";
+
+    html += "<form method='get' action='/update' class='styled-form' onsubmit='redirectToHome()'>";
     html += "<label>Change Channel ID:</label>";
     html += "<input type='text' name='channel_id' value='" + channel_ID + "'>";
     html += "<input type='submit' value='Submit'><br>";
@@ -159,6 +165,9 @@ void WiFiConnection::update() {
     }
     if (server.hasArg("cloud_value_scale")) {
       cloud_value_scale = server.arg("cloud_value_scale").toFloat();
+    }
+    if (server.hasArg("weight_557")) {
+      weight_557 = server.arg("weight_557").toFloat();
     }
     if (server.hasArg("channel_id")) {
       channel_ID = server.arg("channel_id");
@@ -213,6 +222,7 @@ void WiFiConnection::getParam(float * data) {
   data[2] = zenit;
   data[3] = utc_off;
   data[4] = cloud_value_scale;
+  data[5] = weight_557;
   
    
 }
@@ -223,6 +233,7 @@ void WiFiConnection::setParam(float * data) {
   zenit = data[2];
   utc_off = data[3];
   cloud_value_scale = data[4];
+  weight_557 = data[5];
   
    
 }

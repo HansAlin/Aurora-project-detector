@@ -15,6 +15,7 @@ private:
   float zenit;
   float utc_off;
   float cloud_value_scale;
+  float weight_557;
   float temperature;
   float humidity;
   float aurora_point;

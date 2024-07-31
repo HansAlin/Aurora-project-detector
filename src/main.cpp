@@ -88,11 +88,7 @@ float lux_557;        // is Lux from sensor
 float IR_557;        //is the IR value from sensor 
 float full_557;       // is the full value from senor
 
-bool spike;                       // Spike in data
-int spike_limit = 300;            // Value above average thats a spike in data
-const int len_history = 6;
-int full_history[len_history] = {0,0,0,0,0,0}; // keeping track of full values
-float aurora_point = 0;
+float aurora_point = 0;          // Aurora points
 int global_count = 0;
 
 
@@ -106,8 +102,8 @@ float cloud_value_scale = 0.6;  // Scaling the output from get_cloud_value, valu
                                 // starting point, if cloud values are to hight raise value and vice versa
 
 // Data to and from web
-const int numOfElementsParamList = 5;                               
-float paramList[numOfElementsParamList] = {longitude, latitude, zenit, utc_off, cloud_value_scale};
+const int numOfElementsParamList = 6;                               
+float paramList[numOfElementsParamList] = {longitude, latitude, zenit, utc_off, cloud_value_scale, weight_557};
 
 // Declare functions
 void updateParamList(float * data);
@@ -115,7 +111,6 @@ void upDateParamFromParamList(float * data);
 void upDateAPIList(String * API_data);
 void upDateAPIFromList(String * API_data);
 void TCA9548A(uint8_t bus);
-bool if_spike(int * history, int len_history, float spike_limit, float value);
 void collecting_data_from_sensors();
 void sleep(int sleepsec);
 
@@ -133,7 +128,7 @@ DHT dht(DHTPIN, DHTTYPE);
 // Instanciate custom classes
 CloudCover cc;
 TSpeak thingSpeak;
-AuroraPoints auror;
+AuroraPoints auror(0);
 NightVeto nightVeto;
 WiFiConnection wifiConnection(ssid_detector, password_detector);
 FileHandle fileHandle;
@@ -230,13 +225,14 @@ void loop() {
   Serial.println();
 
   thingSpeak.connect_to_internet();   // Connect to internet and ThingSpeak
+  thingSpeak.updateAPI(myWriteAPIKey_1, myReadAPIKey_1, channel_ID_1);
   thingSpeak.upload(write_data, write_fields, write_data_length );            // Upload to ThingSpeak
 
   fileHandle.saveParam(paramList);
   
   Serial.println("---------------");
   Serial.println();
-  delay(10000);
+  delay(12000);
  
 }
 
@@ -248,6 +244,7 @@ void updateParamList(float * data) {
   data[2] = zenit;
   data[3] = utc_off;
   data[4] = cloud_value_scale;
+  data[5] = weight_557;
 
   Serial.println("Update paramList: ");
   for (int i = 0; i < 8; i++) {
@@ -263,6 +260,7 @@ void upDateParamFromParamList(float * data) {
   zenit = data[2];
   utc_off = data[3];
   cloud_value_scale = data[4];
+  weight_557 = data[5];
 
 }
 
@@ -301,40 +299,7 @@ void TCA9548A(uint8_t bus) {
   Wire.endTransmission();
 }
 
-bool if_spike(int * history, int len_history, float spike_limit, float value) {
-  float mean = 0;
-  bool spike = true;
-  float sum = 0;
-  int new_history[len_history];
-  for (int i = 0; i <= len_history; i++) {
-    sum += history[i];
-  } 
-  mean = sum/len_history;
-  
-  if ((value ) > mean + spike_limit) {
-    spike = true;
-    Serial.println("SPIKE!!!");
-  }
-  else {
-    spike = false;
-  }
-  for (int j = 0; j < len_history; j++) {
-      new_history[j] = history[j + 1];
-      history[j] = new_history[j];
-    }
 
-  Serial.println("Average value from " + String{len_history} + " full values: " + String{mean});
-  if (spike) {
-    // Average out the spike value
-    history[len_history] = (new_history[len_history - 1] + new_history[len_history - 2] + value)/3;
-  }
-  else {
-    history[len_history] = value;
-  }
-  
-
-  return spike;
-}
 
 void collecting_data_from_sensors(){
   Serial.println();
@@ -350,7 +315,6 @@ void collecting_data_from_sensors(){
   tsl2591_1.advancedRead(values);
   lux = values[0];    // is Lux from sensor
   IR = values[1];     // is the IR value from sensor 
-  spike = if_spike( full_history, len_history, spike_limit, values[2]);
   full = values[2];   // is the full value from senor 
   // Writes in previous operation
   // Serial.println("Lux from sensor 3 :" + String(lux)); 
@@ -439,20 +403,12 @@ void collecting_data_from_sensors(){
   if (objectTemp < -250) {
     cloud = 0;
   }
-  
-
-  float new_aurora_point = auror.get_aurora_points(IR, full, full_557, cloud, night, weight_557);
-  // Secure that no temporary high values will be recorded
-  if (spike || (new_aurora_point > 50.0) || (full_557/full < 0.002)) {
-
-    Serial.println("Probably not aurora!");
-    aurora_point = 0;
-  }
-  else {
-    aurora_point = new_aurora_point; 
-  }
+ 
+  aurora_point = auror.get_aurora_points(IR, full, full_557, cloud, night, weight_557);
+ 
   Serial.println("Aurora points                  : " + String(aurora_point));
   Serial.println("Cloud value                    : " + String(cloud));
+  Serial.println("Weighting factor               : " + String(weight_557));
   Serial.println("Temerature at detector (DHT)   : " + String(temperature));
   Serial.println("Humidity value                 : " + String(humidity));
   Serial.println("Ambient temperature (MLX)      : " + String(ambientTemp));
