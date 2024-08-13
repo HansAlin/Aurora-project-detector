@@ -23,6 +23,7 @@ private:
   float full;
   float cloud;
   float objectTemp;
+  int aurora_test;
   String channel_ID;
   String writeAPI;
   String readAPI;

@@ -51,35 +51,41 @@ float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, floa
     full = FULL;
     _557 = FULL_557;
     if_first = false;
+    Serial.println("First values: " + String{full} + " " + String{_557});
   }
 
   // ##### Constraints on full data #####
   // Get rid of artificial values, value differences between brevious value and current value
   // should not be more than 1000
   if (abs(FULL - full) > max_full_prev_diff ) {
+    Serial.println("Full value too high" + String(FULL - full));
     return 0;
   }
 
   // If fraction is too low, return 0
   if (FULL != 0) {
     if (FULL_557/FULL < fraction_limit) {
+      Serial.println("Fraction too low" + String(FULL_557/FULL));
       return 0;
     
     }
   }
   
   if (FULL == 0 || IR == 0 || night == false ) {
+    Serial.println("Day or zero value");
     return 0;
   }
 
   // Check if there is a spike in the data compared to the average of the last 6 values
   full_spike = if_spike(full_history, len_full_history, spike_full_limit, FULL);
   if (full_spike) {
+    Serial.println("Full spike");
     return 0;
   }
 
   // If full are to high, return 0
   if (FULL > max_abs_full) {
+    Serial.println("Full value too high");
     return 0;
   }
 
@@ -87,11 +93,13 @@ float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, floa
   // Get rid of spike values, value differences between brevious value and current value
   // should not be more than 35
   if (abs(FULL_557 - _557) > max_557_diff) {
+    Serial.println("557nm value differance too high");
     return 0;
   }
 
   // 557nm value should not be more than 50
   if (FULL_557 > max_abs_557) {
+    Serial.println("557nm value too high");
     return 0;
   }
 
@@ -131,8 +139,8 @@ bool AuroraPoints::if_spike(int * history, int len_history, float spike_limit, f
   float mean = 0;
   bool spike = true;
   float sum = 0;
-  int new_history[len_history];
-  for (int i = 0; i <= len_history; i++) {
+
+  for (int i = 0; i < len_history; i++) {
     sum += history[i];
   } 
   mean = sum/len_history;
@@ -145,17 +153,16 @@ bool AuroraPoints::if_spike(int * history, int len_history, float spike_limit, f
     spike = false;
   }
   for (int j = 0; j < len_history; j++) {
-      new_history[j] = history[j + 1];
-      history[j] = new_history[j];
+      history[j] = history[j + 1];
     }
 
   Serial.println("Average value from " + String{len_history} + " full values: " + String{mean});
   if (spike) {
     // Average out the spike value
-    history[len_history - 1] = (new_history[len_history - 2] + value)/3; // Changed from history[len_history] to history[len_history - 1]
+    history[len_history - 1] = (mean + value)/2; 
   }
   else {
-    history[len_history - 1] = value; // Changed from history[len_history] to history[len_history - 1]
+    history[len_history - 1] = value; 
   }
   
 

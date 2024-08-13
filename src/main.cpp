@@ -100,10 +100,11 @@ float zenit = 102.0;            // Sun zenit angle
 float utc_off = 2.0;            // UTC off cet
 float cloud_value_scale = 0.6;  // Scaling the output from get_cloud_value, values 0 to 1 where. 0.6 is good 
                                 // starting point, if cloud values are to hight raise value and vice versa
+int aurora_test = 0;            // Test aurora response                                
 
 // Data to and from web
-const int numOfElementsParamList = 6;                               
-float paramList[numOfElementsParamList] = {longitude, latitude, zenit, utc_off, cloud_value_scale, weight_557};
+const int numOfElementsParamList = 7;                               
+float paramList[numOfElementsParamList] = {longitude, latitude, zenit, utc_off, cloud_value_scale, weight_557, aurora_test};
 
 // Declare functions
 void updateParamList(float * data);
@@ -233,6 +234,9 @@ void loop() {
   Serial.println("---------------");
   Serial.println();
   delay(12000);
+  if (aurora_test == 1) {
+    delay(12000);
+  }
  
 }
 
@@ -245,6 +249,7 @@ void updateParamList(float * data) {
   data[3] = utc_off;
   data[4] = cloud_value_scale;
   data[5] = weight_557;
+  data[6] = aurora_test;
 
   Serial.println("Update paramList: ");
   for (int i = 0; i < 8; i++) {
@@ -261,6 +266,7 @@ void upDateParamFromParamList(float * data) {
   utc_off = data[3];
   cloud_value_scale = data[4];
   weight_557 = data[5];
+  aurora_test = data[6];
 
 }
 
@@ -364,6 +370,7 @@ void collecting_data_from_sensors(){
     int counter = 1;
     while (((x < -40.0) || (x > 125.0)) && counter <= SENSOR_READ_RETRIES) { // On success, read() will return 1, on fail 0.
       x = mlx.readAmbientTempC();
+      emissivity = mlx.readEmissivity();
       counter++;
       
     }
@@ -403,9 +410,14 @@ void collecting_data_from_sensors(){
   if (objectTemp < -250) {
     cloud = 0;
   }
+
  
   aurora_point = auror.get_aurora_points(IR, full, full_557, cloud, night, weight_557);
- 
+  if (aurora_test == 1) {
+    aurora_point = 10;
+    Serial.println("This is a test of aurora alert!");
+  }
+
   Serial.println("Aurora points                  : " + String(aurora_point));
   Serial.println("Cloud value                    : " + String(cloud));
   Serial.println("Weighting factor               : " + String(weight_557));
@@ -419,6 +431,7 @@ void collecting_data_from_sensors(){
   Serial.println("Full 557                       : " + String(full_557));
   Serial.println("IR 557                         : " + String(IR_557));
   Serial.println("Lux 557                        : " + String(lux_557));
+  Serial.println("Emmisivity                     : " + String(emissivity));
   Serial.println("Time                           : " + t.getFormatedTime());
   if (night) {
     Serial.println("Day or night                   : Night");  

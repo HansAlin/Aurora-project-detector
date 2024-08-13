@@ -1,7 +1,7 @@
 #include "WiFiConnection.h"
 
 WiFiConnection::WiFiConnection(const char* ssid, const char* password)
-  : ssid(ssid), password(password), server(80), longitude(0), latitude(0), zenit(0), utc_off(0), cloud_value_scale(0), weight_557(0), temperature(0), humidity(0), aurora_point(0) {}
+  : ssid(ssid), password(password), server(80), longitude(0), latitude(0), zenit(0), utc_off(0), cloud_value_scale(0), weight_557(0), temperature(0), humidity(0), aurora_point(0), aurora_test(0) {}
 
 const char* cssContent = R"(
 
@@ -143,6 +143,10 @@ void WiFiConnection::update() {
     html += "<input type='submit' value='Connect'>";
     html += "</form>";
 
+    html += "<form method='get' action='/button' class='styled-form'>";
+    html += "<input type='submit' value='Test Aurora'>";
+    html += "</form>";
+
     html += "</center>";
     html += "</body></html>";
     
@@ -205,11 +209,22 @@ void WiFiConnection::update() {
     //ESP.reset();
   });
 
-  
+  server.on("/button", [this]() {
+  Serial.println("Button pressed");
+  aurora_test = 1;
+  server.sendHeader("Location", "/");
+  server.send(303); 
+  });
 
   server.begin();
   Serial.println("Web server started");
+
+
+
+
 }
+
+
 
 
 void WiFiConnection::handleClient() {
@@ -223,6 +238,8 @@ void WiFiConnection::getParam(float * data) {
   data[3] = utc_off;
   data[4] = cloud_value_scale;
   data[5] = weight_557;
+  data[6] = aurora_test;
+  aurora_test = 0;
   
    
 }
