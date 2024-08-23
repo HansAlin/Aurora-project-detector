@@ -56,7 +56,7 @@ int delayTime = 0;            // Initial delay time for microcontroler
 int sda = 4;                  // Pin on D1 MINI D2 on board ESP8266
 int scl = 5;                  // Pin on D1 MINI D1 on board ESP8266
 float sleeping;               // If module going to sleep
-int SLEEPSEC = 22;            // Short sleep during normal running
+int SLEEPSEC = 12;            // Short sleep during normal running
 int time_to_dusk;             // Time from ThingSpeak in minutes to dusk
 unsigned int raw;             // Reading value from A0 analog pin
 // float max_voltage = 4.1;      // Max voltage on battery not implemented
@@ -233,9 +233,9 @@ void loop() {
   
   Serial.println("---------------");
   Serial.println();
-  delay(12000);
+  delay(SLEEPSEC*1000);
   if (aurora_test == 1) {
-    delay(12000);
+    delay(SLEEPSEC*4000);
   }
  
 }
@@ -411,6 +411,14 @@ void collecting_data_from_sensors(){
     cloud = 0;
   }
 
+
+  // Only for testing
+  // IR = 461;
+  // full = 1320;
+  // full_557 = 14;
+  // cloud = 0.4791;
+  // night = true;
+  // weight_557 = 1.0;
  
   aurora_point = auror.get_aurora_points(IR, full, full_557, cloud, night, weight_557);
   if (aurora_test == 1) {

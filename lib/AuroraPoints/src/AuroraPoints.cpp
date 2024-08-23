@@ -59,34 +59,44 @@ float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, floa
   // should not be more than 1000
   if (abs(FULL - full) > max_full_prev_diff ) {
     Serial.println("Full value too high" + String(FULL - full));
-    return 0;
+    return -301;
   }
 
   // If fraction is too low, return 0
   if (FULL != 0) {
     if (FULL_557/FULL < fraction_limit) {
       Serial.println("Fraction too low" + String(FULL_557/FULL));
-      return 0;
+      return -302;
     
     }
   }
   
-  if (FULL == 0 || IR == 0 || night == false ) {
-    Serial.println("Day or zero value");
-    return 0;
+  if (FULL == 0 ) {
+    Serial.println("Full value zero");
+    return -303;
+  }
+  
+  if (IR == 0) {
+    Serial.println("IR value zero");
+    return -304;
+  }
+  
+  if (night == false ) {
+    Serial.println("Daytime");
+    return -305;
   }
 
   // Check if there is a spike in the data compared to the average of the last 6 values
   full_spike = if_spike(full_history, len_full_history, spike_full_limit, FULL);
   if (full_spike) {
     Serial.println("Full spike");
-    return 0;
+    return -306;
   }
 
   // If full are to high, return 0
   if (FULL > max_abs_full) {
     Serial.println("Full value too high");
-    return 0;
+    return -307;
   }
 
   // ##### Constraints on 557nm data #####
@@ -94,13 +104,13 @@ float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, floa
   // should not be more than 35
   if (abs(FULL_557 - _557) > max_557_diff) {
     Serial.println("557nm value differance too high");
-    return 0;
+    return -308;
   }
 
   // 557nm value should not be more than 50
   if (FULL_557 > max_abs_557) {
     Serial.println("557nm value too high");
-    return 0;
+    return -309;
   }
 
 
