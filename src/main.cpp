@@ -419,7 +419,7 @@ void collecting_data_from_sensors(){
   // cloud = 0.4791;
   // night = true;
   // weight_557 = 1.0;
- 
+  Serial.println("Calculating aurora points: ");
   aurora_point = auror.get_aurora_points(IR, full, full_557, cloud, night, weight_557);
   if (aurora_test == 1) {
     aurora_point = 10;
