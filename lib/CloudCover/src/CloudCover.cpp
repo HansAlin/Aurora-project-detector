@@ -51,7 +51,7 @@ float CloudCover::clear_sky_temp() {
 }
 
 
-float CloudCover::get_cloud_value(float cloud_value_scale=0.6, float _humidity=0.0, float _temperature=0.0, float object_temp=999.0, float ambient_temp=999.0 ) {
+float CloudCover::get_clear_sky_value(float cloud_value_scale=0.6, float _humidity=0.0, float _temperature=0.0, float object_temp=999.0, float ambient_temp=999.0 ) {
   /** 
    * @brief This function calculate the cloude value
    * @return:
@@ -67,21 +67,21 @@ float CloudCover::get_cloud_value(float cloud_value_scale=0.6, float _humidity=0
   objectTemp = object_temp;
   ambientTemp = ambient_temp;
 
-  calculated_sky_temp = clear_sky_temp();
+  // calculated_sky_temp = clear_sky_temp();
 
-  float temp_diff = objectTemp - calculated_sky_temp;
-  float cloud_factor = temp_diff/(15 + cloud_value_scale*25); // Scaling between 15 to 40 degrees 
-  if (cloud_factor < 0) {
-    // Serial.println("Cloud value: " + String(1));
-    return 1;
-  }
-  else if (cloud_factor > 1) {
-    // Serial.println("Cloud value: " + String(0));
+  float temp_diff = ambientTemp - objectTemp;
+  float clear_sky_factor = temp_diff/(cloud_value_scale*100); // Scaling between 15 to 40 degrees 
+  if (clear_sky_factor < 0) {
+    // Serial.println("Clear sky value: " + String(0));
     return 0;
   }
+  else if (clear_sky_factor > 1) {
+    // Serial.println("Clear sky value:" + String());
+    return 1;
+  }
   else {
-    // Serial.println("Cloud value: " + String(1 - cloud_factor));
-    return 1 - cloud_factor;
+    // Serial.println("Clear sky value:" + String(clear_sky_factor));
+    return clear_sky_factor;
   }
 
 }

@@ -1,23 +1,37 @@
 #include "WiFiConnection.h"
 
+static String savedSSID;
+static String savedPassword;
+
 WiFiConnection::WiFiConnection(const char* ssid, const char* password)
   : ssid(ssid), password(password), server(80), longitude(0), latitude(0), zenit(0), utc_off(0), cloud_value_scale(0), temperature(0), humidity(0), aurora_point(0) {}
 
 void WiFiConnection::update() {
-  WiFi.mode(WIFI_AP_STA);
-  WiFi.softAP(ssid, password);
-  Serial.println();
-  Serial.print("Access Point Mode IP address: ");
-  Serial.println(WiFi.softAPIP());
-  // if (WiFi.status() !=WL_CONNECTED) {
-  //   int count = 0;
-  //   Serial.println("Trying to access wifi");
-  //   while (WiFi.begin() != WL_CONNECTED && count < 10 ) {
-  //     Serial.print(".");
-  //     count += 1;
-  //     delay(500);
-  //   }
-  // }
+    Serial.println();
+    Serial.println("Starting Wi-Fi connection...");
+
+    WiFi.mode(WIFI_STA);
+
+    // Try to connect using stored credentials first
+    WiFi.begin();
+    unsigned long startTime = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - startTime < 3000) {
+        Serial.print(".");
+        delay(250);
+    }
+
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.println();
+        Serial.print("Reconnected to saved Wi-Fi! IP: ");
+        Serial.println(WiFi.localIP());
+    } else {
+        Serial.println();
+        Serial.println("Failed to connect to saved Wi-Fi. Starting Access Point...");
+        WiFi.mode(WIFI_AP_STA);
+        WiFi.softAP("AuroraSetup", "12345678");  // simple setup AP
+        Serial.print("AP Mode IP: ");
+        Serial.println(WiFi.softAPIP());
+    }
   server.on("/", [this]() {
     String html = "<html><body>";
     html += "<h2>Values</h2>";
@@ -133,19 +147,43 @@ void WiFiConnection::update() {
   });
 
   server.on("/connect", [this]() {
-    String ssidParam = server.arg("ssid");
-    String passwordParam = server.arg("password");
-    ssid = ssidParam.c_str();
-    password = passwordParam.c_str();
-    Serial.println(ssid);
-    Serial.println(password);
-    WiFi.begin(ssid, password);
-    Serial.print("Local IPaddress: ");
-    Serial.println(WiFi.localIP());
-    server.send(200, "text/plain", "Wi-Fi connected!");
-    delay(1000);
-    //ESP.reset();
+      String ssidParam = server.arg("ssid");
+      String passwordParam = server.arg("password");
+
+      Serial.print("Connecting to new Wi-Fi: ");
+      Serial.println(ssidParam);
+
+      WiFi.mode(WIFI_STA);
+      WiFi.persistent(true);  // save credentials to flash
+      WiFi.begin(ssidParam.c_str(), passwordParam.c_str());
+
+      unsigned long startTime = millis();
+      bool connected = false;
+
+      // Attempt connection for up to 5 seconds (non-blocking friendly)
+      while (millis() - startTime < 5000) {
+          if (WiFi.status() == WL_CONNECTED) {
+              connected = true;
+              break;
+          }
+          delay(250);
+      }
+
+      if (connected) {
+          Serial.println();
+          Serial.print("Connected! IP: ");
+          Serial.println(WiFi.localIP());
+          server.send(200, "text/plain", "Wi-Fi connected and saved!");
+          delay(500);
+          ESP.restart();  // reboot into STA mode with saved credentials
+      } else {
+          Serial.println("Connection failed!");
+          server.send(200, "text/plain", "Connection failed! Check SSID/password.");
+      }
   });
+
+
+
 
   
 

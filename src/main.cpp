@@ -8,6 +8,7 @@
 #include <Adafruit_MLX90614.h>
 #include "SPI.h"
 #include <Adafruit_Sensor.h>
+#include <ArduinoOTA.h>
 
 // Libraries for this project
 #include "AuroraPoints.h"
@@ -102,7 +103,7 @@ float longitude = 14.600036;    // Position
 float latitude = 61.01030;      // Position
 float zenit = 109.0;            // Sun zenit angle
 float utc_off = 2.0;            // UTC off cet
-float cloud_value_scale = 0.6;  // Scaling the output from get_cloud_value, values 0 to 1 where. 0.6 is good 
+float cloud_value_scale = 0.3;  // Scaling the output from get_cloud_value, values 0 to 1 where. 0.3 is good 
                                 // starting point, if cloud values are to hight raise value and vice versa
 
 // Data to and from web
@@ -148,6 +149,25 @@ void setup() {
   Serial.println();
   Serial.println("----------  Set-up!  ----------------");
   wifiConnection.update();
+
+  // OTA set-up --------------------------
+  ArduinoOTA.setHostname("d1mini-aurora");
+  ArduinoOTA.onStart([]() { Serial.println("OTA update start"); });
+  ArduinoOTA.onEnd([]() { Serial.println("OTA update complete"); });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+      Serial.printf("OTA Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+      Serial.printf("OTA Error[%u]: ", error);
+      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+      else if (error == OTA_END_ERROR) Serial.println("End Failed");
+  });
+  ArduinoOTA.begin();
+  // End OTA set-up --------------------------
+
   fileHandle.initFS();
   fileHandle.getParam(paramList);         // Get saved data
   fileHandle.getAPI(APIList);           // Get saved data
@@ -237,7 +257,7 @@ void loop() {
 
   
   fileHandle.saveParam(paramList);
-  
+  ArduinoOTA.handle();
   Serial.println("---------------");
   Serial.println();
   delay(10000);
@@ -435,13 +455,13 @@ void collecting_data_from_sensors(){
     }
     count = 0;
   }
-  float cloud = cc.get_cloud_value(cloud_value_scale, humidity, temperature, objectTemp, ambientTemp);
+  float clear_sky_value = cc.get_clear_sky_value(cloud_value_scale, humidity, temperature, objectTemp, ambientTemp);
   if (objectTemp < -250) {
-    cloud = 0;
+    clear_sky_value = 0;
   }
   
 
-  float new_aurora_point = auror.get_aurora_points(IR, full, full_557, cloud, night, weight_557);
+  float new_aurora_point = auror.get_aurora_points(IR, full, full_557, clear_sky_value, night, weight_557);
   // Secure that no temporary high values will be recorded
   if (spike || (new_aurora_point > 50.0) || (full_557/full < 0.002)) {
 
@@ -452,7 +472,7 @@ void collecting_data_from_sensors(){
     aurora_point = new_aurora_point; 
   }
   Serial.println("Aurora points                  : " + String(aurora_point));
-  Serial.println("Cloud value                    : " + String(cloud));
+  Serial.println("Clear sky value                : " + String(clear_sky_value));
   Serial.println("Temerature at detector (DHT)   : " + String(temperature));
   Serial.println("Humidity value                 : " + String(humidity));
   Serial.println("Ambient temperature (MLX)      : " + String(ambientTemp));
@@ -467,7 +487,7 @@ void collecting_data_from_sensors(){
   // Data to ThingSpeak
   write_data[0] = full_557;    
   write_data[1] = full;
-  write_data[2] = cloud;  
+  write_data[2] = clear_sky_value;  
   write_data[3] = aurora_point;
   write_data[4] = temperature;
   write_data[5] = humidity;

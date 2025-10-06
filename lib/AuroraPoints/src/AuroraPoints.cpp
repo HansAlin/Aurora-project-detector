@@ -11,13 +11,13 @@ AuroraPoints::AuroraPoints() {
   float _557 = -1;
 }
 
-float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, float cloud_cover, bool night, float weight_557=1.0) {
+float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, float clear_sky_value, bool night, float weight_557=1.0) {
   /**
    * @brief This function calculates the aurora points
    * @param IR  IR value from sensor without filter 
    * @param FULL FULL value from sensor without filter
    * @param FULL_557 Full value from sensor with filter
-   * @param cloud_cover value from a CloudCover object cloud value
+   * @param clear_sky_value value from a CloudCover object get_clear_sky_value function
    * @param night night veto
    * @param weight_557 weighting factor for FULL_557 value
    * @param raction_weight weighting factor for fraction between   
@@ -44,9 +44,8 @@ float AuroraPoints::get_aurora_points(float IR, float FULL, float FULL_557, floa
   else {
     points_fraction_557_FULL = _557/denominator * 150 *(1 - weight_557);
   }
-  
-  float points_clear_sky = cloud_cover;
-  float points_total = (points_557 + points_fraction_557_FULL) * points_clear_sky;
+
+  float points_total = (points_557 + points_fraction_557_FULL) * clear_sky_value;
   // Serial.println("Weighted 557nm value: " + String(points_557));
   // Serial.println("Fraction points: " + String(points_fraction_557_FULL));
   // Serial.println("Cloud cover: " + String(cloud_cover));
