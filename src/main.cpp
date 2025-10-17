@@ -1,14 +1,11 @@
-#include <Arduino.h>     // Needed when working Platform io
-// ----------(c) Electronics-project-hub-------- //
-//        Program for ESP8266 D1 MINI
-//        
-// Libraries
+#include <Arduino.h>     
 #include <ESP8266WiFi.h>
 #include <Adafruit_I2CDevice.h>
 #include <Adafruit_MLX90614.h>
 #include "SPI.h"
 #include <Adafruit_Sensor.h>
 #include <ArduinoOTA.h>
+#include "DHT.h"
 
 // Libraries for this project
 #include "AuroraPoints.h"
@@ -17,8 +14,9 @@
 #include "CloudCover.h"
 #include "WifiConnection.h"
 #include "NightVeto.h"
-#include "DHT.h"
 #include "FileHandle.h"
+#include "TimeKeeping.h"
+
 
 #define MLX90614_I2CADDR 0x5A
 #define DHTPIN D7              // D4 on wemos d1 mini
@@ -26,7 +24,8 @@
 #define TSL2591_I2CADDR 0x29  // I2c address to light sensor
 #define MAX_SLEPING_TIME 200 // Sleeping time in minutes 
 #define SENSOR_READ_RETRIES 5  // How many atempt to read mlx sensor
-#define SENSOR_READ_CYCLES 5  // How often certain sensors should be readed
+#define DHT22_SENSOR_READ_CYCLES 10  // How often DHT sensors should be readed
+#define MLX_SENSOR_READ_CYCLES 5  // How often MLX sensors should be readed
 
 
 // TODO comment
@@ -42,8 +41,8 @@ unsigned long channel_ID_1;
 char myWriteAPIKey_1[20]; 
 char myReadAPIKey_1[20];
 //-------------------------------------------//
-const int numOfElementsAPI = 3;
-String APIList[numOfElementsAPI] = {String(channel_ID_1), String(myWriteAPIKey_1), String(myReadAPIKey_1)};
+const int numOfElementsAPI = 5;
+String APIList[numOfElementsAPI] = {String(channel_ID_1), String(myWriteAPIKey_1), String(myReadAPIKey_1), "", ""};
 
 
 unsigned long input_value;
@@ -58,12 +57,12 @@ int delayTime = 0;            // Initial delay time for microcontroler
 int sda = 4;                  // Pin on D1 MINI D2 on board ESP8266
 int scl = 5;                  // Pin on D1 MINI D1 on board ESP8266
 float sleeping;               // If module going to sleep
-int SLEEPSEC = 22;            // Short sleep during normal running
+int SLEEPSEC = 12;            // Short sleep during normal running
 int time_to_dusk;             // Time from ThingSpeak in minutes to dusk
 unsigned int raw;             // Reading value from A0 analog pin
 // float max_voltage = 4.1;      // Max voltage on battery not implemented
 const int number_of_sensors = 2;
-bool night = 0;                // Returning night veto value from thingSpeak 0=day 1=night
+bool night = 0;                // Returning night veto 
 
 float weight_557 = 1;         // Weighting factor between raw 557nm data and aurora points
                               // Values 0 to 1. 1 corresponds to that only raw data from 557nm filter sensor is taking 
@@ -80,7 +79,8 @@ float temperature = 0;
 float humidity = 0;  
 float ambientTemp = 999;
 float objectTemp = 999;
-int count = 1;                // Take care of how many times data is looked up                             
+int dht_count = 1;                // Take care of how many times data is looked up  
+int mlx_count = 1;                // Take care of how many times data is looked up                            
 
 float lux = 0;                    // is Lux from sensor
 float IR = 0;                     // is the IR value from sensor 
@@ -89,11 +89,7 @@ float lux_557;        // is Lux from sensor
 float IR_557;        //is the IR value from sensor 
 float full_557;       // is the full value from senor
 
-bool spike;                       // Spike in data
-int spike_limit = 300;            // Value above average thats a spike in data
-const int len_history = 6;
-int full_history[len_history] = {0,0,0,0,0,0}; // keeping track of full values
-float aurora_point = 0;
+float aurora_point = 0;          // Aurora points
 int global_count = 0;
 
 
@@ -101,14 +97,15 @@ int global_count = 0;
 // Initial values, location is Mora Sweden
 float longitude = 14.600036;    // Position
 float latitude = 61.01030;      // Position
-float zenit = 109.0;            // Sun zenit angle
+float zenit = 102.0;            // Sun zenit angle
 float utc_off = 2.0;            // UTC off cet
 float cloud_value_scale = 0.3;  // Scaling the output from get_cloud_value, values 0 to 1 where. 0.3 is good 
                                 // starting point, if cloud values are to hight raise value and vice versa
+int aurora_test = 0;            // Test aurora response                                
 
 // Data to and from web
-const int numOfElementsParamList = 5;                               
-float paramList[numOfElementsParamList] = {longitude, latitude, zenit, utc_off, cloud_value_scale};
+const int numOfElementsParamList = 7;                               
+float paramList[numOfElementsParamList] = {longitude, latitude, zenit, utc_off, cloud_value_scale, weight_557, aurora_test};
 
 // Declare functions
 void updateParamList(float * data);
@@ -116,7 +113,6 @@ void upDateParamFromParamList(float * data);
 void upDateAPIList(String * API_data);
 void upDateAPIFromList(String * API_data);
 void TCA9548A(uint8_t bus);
-bool if_spike(int * history, int len_history, float spike_limit, float value);
 void collecting_data_from_sensors();
 void sleep(int sleepsec);
 
@@ -134,10 +130,11 @@ DHT dht(DHTPIN, DHTTYPE);
 // Instanciate custom classes
 CloudCover cc;
 TSpeak thingSpeak;
-AuroraPoints auror;
+AuroraPoints auror(0);
 NightVeto nightVeto;
 WiFiConnection wifiConnection(ssid_detector, password_detector);
 FileHandle fileHandle;
+TimeKeeping t;
 
 
 
@@ -173,7 +170,7 @@ void setup() {
   fileHandle.getAPI(APIList);           // Get saved data
   upDateParamFromParamList(paramList);   // Update values
   upDateAPIFromList(APIList);           // Update API values
-  
+  WiFi.begin();
   dht.begin();
   delay(50);
   Wire.begin(sda, scl);
@@ -206,6 +203,8 @@ void setup() {
   Serial.println(channel_ID_1);
   thingSpeak.initiate(myWriteAPIKey_1, myReadAPIKey_1, channel_ID_1, client);
   
+  Serial.println("Set up time: ");
+  t.begin(utc_off);
   delay(50);
   pinMode(A0, INPUT);
   delay(50);
@@ -218,7 +217,7 @@ void loop() {
   Serial.println();
   Serial.println('----------- Loop -------------');
   delay(50);
-  
+  t.upDate(utc_off);
   fileHandle.getParam(paramList);
   fileHandle.getAPI(APIList);
 
@@ -235,8 +234,8 @@ void loop() {
   fileHandle.saveAPI(APIList);
   upDateParamFromParamList(paramList);
   upDateAPIFromList(APIList);
-
-  nightVeto.init(longitude, latitude, utc_off);
+  upDateAPIList(APIList);
+  nightVeto.init(longitude, latitude, utc_off, zenit);
 
   collecting_data_from_sensors();     // Collect data from sensors
   
@@ -245,22 +244,19 @@ void loop() {
     Serial.print(String(paramList[i]) + " ");
   }
   Serial.println();
-  
 
   thingSpeak.connect_to_internet();   // Connect to internet and ThingSpeak
+  thingSpeak.updateAPI(myWriteAPIKey_1, myReadAPIKey_1, channel_ID_1);
   thingSpeak.upload(write_data, write_fields, write_data_length );            // Upload to ThingSpeak
-  
-  
-  
 
-  
-
-  
   fileHandle.saveParam(paramList);
   ArduinoOTA.handle();
   Serial.println("---------------");
   Serial.println();
-  delay(10000);
+  delay(SLEEPSEC*1000);
+  if (aurora_test == 1) {
+    delay(SLEEPSEC*4000);
+  }
  
 }
 
@@ -272,6 +268,8 @@ void updateParamList(float * data) {
   data[2] = zenit;
   data[3] = utc_off;
   data[4] = cloud_value_scale;
+  data[5] = weight_557;
+  data[6] = aurora_test;
 
   Serial.println("Update paramList: ");
   for (int i = 0; i < 8; i++) {
@@ -287,6 +285,8 @@ void upDateParamFromParamList(float * data) {
   zenit = data[2];
   utc_off = data[3];
   cloud_value_scale = data[4];
+  weight_557 = data[5];
+  aurora_test = data[6];
 
 }
 
@@ -299,7 +299,7 @@ void upDateAPIFromList(String * API_data) {
   
   str_len = API_data[2].length() + 1;
   myReadAPIKey_1[str_len];
-  API_data[1].toCharArray(myReadAPIKey_1, str_len);
+  API_data[2].toCharArray(myReadAPIKey_1, str_len);
  
 
 }
@@ -308,7 +308,13 @@ void upDateAPIList(String * API_data) {
   API_data[0] = String(channel_ID_1);
   API_data[1] = String(myWriteAPIKey_1);
   API_data[2] = String(myReadAPIKey_1);
-
+  API_data[3] = t.getFormatedTime();
+  if (night) {
+    API_data[4] = "Night";
+  }
+  else {
+    API_data[4] = "Day";
+  }
 
 }
 
@@ -319,46 +325,13 @@ void TCA9548A(uint8_t bus) {
   Wire.endTransmission();
 }
 
-bool if_spike(int * history, int len_history, float spike_limit, float value) {
-  float mean = 0;
-  bool spike = true;
-  float sum = 0;
-  int new_history[len_history];
-  for (int i = 0; i <= len_history; i++) {
-    sum += history[i];
-  } 
-  mean = sum/len_history;
-  
-  if ((value ) > mean + spike_limit) {
-    spike = true;
-    Serial.println("SPIKE!!!");
-  }
-  else {
-    spike = false;
-  }
-  for (int j = 0; j < len_history; j++) {
-      new_history[j] = history[j + 1];
-      history[j] = new_history[j];
-    }
 
-  Serial.println("Average value from " + String{len_history} + " full values: " + String{mean});
-  if (spike) {
-    // Average out the spike value
-    history[len_history] = (new_history[len_history - 1] + new_history[len_history - 2] + value)/3;
-  }
-  else {
-    history[len_history] = value;
-  }
-  
-
-  return spike;
-}
 
 void collecting_data_from_sensors(){
   Serial.println();
   Serial.println("Collecting data: ");
 
-  night = nightVeto.ifNight();
+  night = nightVeto.ifNight(t.getDayOfYear(), t.getMinutes());
     
   float values[3];  // Array to collecting data from TSL2591 sensors
  
@@ -368,7 +341,6 @@ void collecting_data_from_sensors(){
   tsl2591_1.advancedRead(values);
   lux = values[0];    // is Lux from sensor
   IR = values[1];     // is the IR value from sensor 
-  spike = if_spike( full_history, len_history, spike_limit, values[2]);
   full = values[2];   // is the full value from senor 
   // Writes in previous operation
   // Serial.println("Lux from sensor 3 :" + String(lux)); 
@@ -389,10 +361,8 @@ void collecting_data_from_sensors(){
   
   
   // Only check humidty and every 5:th 
-  // TODO remove print
-  // Serial.println("Count " + String(count)) ;
   // Read temp and humidity from DHT22
-  if (count == SENSOR_READ_CYCLES) {
+  if (dht_count == DHT22_SENSOR_READ_CYCLES) {
     float return_value;
     return_value = dht.readHumidity();
     if (!isnan(return_value)) {
@@ -411,15 +381,16 @@ void collecting_data_from_sensors(){
     else {
       Serial.println("Did not manage to read temperature!");
     }
-    
+    dht_count = 0;
   }
   // Read object temp and ambient temp from MLX
-  if (count == SENSOR_READ_CYCLES) {
+  if (mlx_count == MLX_SENSOR_READ_CYCLES) {
     TCA9548A(4);
     float x = mlx.readAmbientTempC();
     int counter = 1;
     while (((x < -40.0) || (x > 125.0)) && counter <= SENSOR_READ_RETRIES) { // On success, read() will return 1, on fail 0.
       x = mlx.readAmbientTempC();
+      emissivity = mlx.readEmissivity();
       counter++;
       
     }
@@ -453,13 +424,13 @@ void collecting_data_from_sensors(){
       // One might keep the emission parameter
       //  Serial.println("Adjusted sky temperature: " + String(objectTemp));
     }
-    count = 0;
+    mlx_count = 0;
   }
   float clear_sky_value = cc.get_clear_sky_value(cloud_value_scale, humidity, temperature, objectTemp, ambientTemp);
   if (objectTemp < -250) {
     clear_sky_value = 0;
   }
-  
+
 
   float new_aurora_point = auror.get_aurora_points(IR, full, full_557, clear_sky_value, night, weight_557);
   // Secure that no temporary high values will be recorded
@@ -483,6 +454,18 @@ void collecting_data_from_sensors(){
   Serial.println("Full 557                       : " + String(full_557));
   Serial.println("IR 557                         : " + String(IR_557));
   Serial.println("Lux 557                        : " + String(lux_557));
+  Serial.println("Emmisivity                     : " + String(emissivity));
+  Serial.println("Time                           : " + t.getFormatedTime());
+  if (night) {
+    Serial.println("Day or night                   : Night");  
+  }
+  else {
+    Serial.println("Day or night                   : day");
+  }
+  Serial.println("Minutes from midnight          : " + String(t.getMinutes()));
+  Serial.println("Day of year                    : " + String(t.getDayOfYear()));
+  Serial.println("Dusk                           : " + String(nightVeto.dusk));
+  Serial.println("Dawn                           : " + String(nightVeto.dawn));
   
   // Data to ThingSpeak
   write_data[0] = full_557;    
@@ -499,7 +482,8 @@ void collecting_data_from_sensors(){
   }
   
 
-  count++;
+  dht_count++;
+  mlx_count++;
 }
 
 void sleep(int sleepsec) {

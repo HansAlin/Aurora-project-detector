@@ -15,6 +15,7 @@ private:
   float zenit;
   float utc_off;
   float cloud_value_scale;
+  float weight_557;
   float temperature;
   float humidity;
   float aurora_point;
@@ -22,9 +23,12 @@ private:
   float full;
   float cloud;
   float objectTemp;
+  int aurora_test;
   String channel_ID;
   String writeAPI;
   String readAPI;
+  String formatedTime;
+  String dayOrNight;
   
 
 public:
